@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
+import { supabase } from '../lib/supabase'
 
 const TEAL = '#0d9e72'
 const TEAL_LIGHT = '#e6f7f2'
@@ -174,9 +175,10 @@ export default function Home() {
           <span style={{ fontWeight: 700, fontSize: 15 }}>CCM Lead CRM</span>
           <span style={{ fontSize: 11, color: '#6b7280', background: '#f1f5f9', padding: '2px 8px', borderRadius: 20 }}>Anchored Health</span>
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: TEAL_LIGHT, color: TEAL_DARK }}>Generate</Link>
           <Link href="/pipeline" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Pipeline</Link>
+          <button onClick={() => supabase.auth.signOut()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280', background: 'transparent', border: '1px solid #e5e7eb', cursor: 'pointer', marginLeft: 8 }}>Sign out</button>
         </div>
       </nav>
 
