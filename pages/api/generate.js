@@ -1,34 +1,68 @@
-// Taxonomy codes for primary care specialties
+// Taxonomy codes for primary care specialties eligible for CCM
 const TAXONOMY_CODES = {
-  'primary care and family medicine': ['207Q00000X', '207QA0505X', '207QA0000X'],
-  'independent primary care practices': ['207Q00000X', '207QA0505X'],
+  'primary care and family medicine': ['207Q00000X', '207QA0505X', '207QA0000X', '207QB0002X', '208D00000X'],
+  'independent primary care practices': ['207Q00000X', '207QA0505X', '208D00000X'],
   'federally qualified health centers FQHCs': ['261QF0400X'],
   'rural health clinics': ['261QR1300X'],
-  'internal medicine clinics': ['207R00000X', '207RI0200X'],
+  'internal medicine clinics': ['207R00000X', '207RI0200X', '207RG0100X'],
 }
+
+// Taxonomy codes that are explicitly NOT eligible for CCM — used to block bad results
+const EXCLUDED_TAXONOMY_CODES = new Set([
+  '251E00000X', // Home Health
+  '251G00000X', // Visiting Nurse
+  '251S00000X', // Community/Behavioral Health
+  '225100000X', // Physical Therapist
+  '225200000X', // Occupational Therapist
+  '225400000X', // Sports Therapist
+  '226300000X', // Kinesiotherapist
+  '222Z00000X', // Orthotist
+  '224P00000X', // Prosthetist
+  '367500000X', // Nurse Anesthetist
+  '163W00000X', // Registered Nurse
+  '164W00000X', // Licensed Practical Nurse
+  '261QH0100X', // Hospice
+  '275N00000X', // Medicare Defined Swing Bed Unit
+  '281P00000X', // Chronic Disease Hospital
+  '282N00000X', // General Acute Care Hospital
+  '283Q00000X', // Psychiatric Hospital
+  '286500000X', // Military Hospital
+  '291U00000X', // Clinical Medical Laboratory
+  '293D00000X', // Physiological Laboratory
+  '302R00000X', // Managed Care Organization
+  '305S00000X', // PACE Provider
+  '311500000X', // Alzheimer Center
+  '311Z00000X', // Custodial Care Facility
+  '313M00000X', // Nursing Facility
+  '314000000X', // Skilled Nursing Facility
+  '315D00000X', // Hospice, Inpatient
+  '315P00000X', // Intermediate Care Facility
+  '174400000X', // Specialist
+  '251B00000X', // Case Management
+  '251C00000X', // Day Training
+  '251F00000X', // Home Infusion
+  '251J00000X', // Supports Brokerage
+  '251K00000X', // Public Health or Welfare
+  '252Y00000X', // Home Health Aide
+])
 
 async function fetchNPIProviders(city, state, taxonomyCodes, limit) {
   const stateAbbr = state.trim().length === 2
     ? state.trim().toUpperCase()
     : STATE_MAP[state.trim().toLowerCase()] || state.trim().toUpperCase()
 
+  const codeSet = new Set(taxonomyCodes)
   const results = []
 
-  for (const code of taxonomyCodes) {
-    if (results.length >= limit) break
-    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&taxonomy_description=&limit=20&skip=0`
-    try {
-      const res = await fetch(url)
-      if (!res.ok) continue
-      const data = await res.json()
-      if (data.results) results.push(...data.results)
-    } catch (_) {}
-  }
+  // The NPI API taxonomy_description param is a text search, not a code filter.
+  // Search by city/state only and rely entirely on post-filtering by taxonomy code.
+  const urls = [
+    `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-1&city=${encodeURIComponent(city)}&state=${stateAbbr}&limit=50&skip=0`,
+    `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&limit=50&skip=0`,
+  ]
 
-  // Also try a broader search by city+state for org type NPI-2
-  if (results.length < limit) {
+  for (const url of urls) {
     try {
-      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&limit=25&skip=0`
       const res = await fetch(url)
       if (res.ok) {
         const data = await res.json()
@@ -37,13 +71,22 @@ async function fetchNPIProviders(city, state, taxonomyCodes, limit) {
     } catch (_) {}
   }
 
+  // Keep only providers whose PRIMARY taxonomy matches a target code
+  // AND whose primary taxonomy is not in the excluded list
+  const filtered = results.filter(r => {
+    const taxonomies = r.taxonomies || []
+    const primary = taxonomies.find(t => t.primary) || taxonomies[0]
+    if (!primary) return false
+    return codeSet.has(primary.code) && !EXCLUDED_TAXONOMY_CODES.has(primary.code)
+  })
+
   // Deduplicate by NPI number
   const seen = new Set()
-  return results.filter(r => {
+  return filtered.filter(r => {
     if (seen.has(r.number)) return false
     seen.add(r.number)
     return true
-  }).slice(0, limit * 3) // get extra so Claude can pick the best
+  }).slice(0, limit * 3)
 }
 
 function extractPracticeInfo(npiResult) {
