@@ -14,36 +14,33 @@ async function fetchNPIProviders(city, state, taxonomyCodes, limit) {
 
   const results = []
 
+  // Search once per taxonomy code, passing it explicitly so the registry filters by specialty
   for (const code of taxonomyCodes) {
-    if (results.length >= limit) break
-    const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&taxonomy_description=&limit=20&skip=0`
+    if (results.length >= limit * 3) break
+    // NPI-1 (individual providers) with this taxonomy code
+    const urlInd = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-1&city=${encodeURIComponent(city)}&state=${stateAbbr}&taxonomy_description=${code}&limit=25&skip=0`
+    // NPI-2 (organizations) with this taxonomy code
+    const urlOrg = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&taxonomy_description=${code}&limit=25&skip=0`
     try {
-      const res = await fetch(url)
-      if (!res.ok) continue
-      const data = await res.json()
-      if (data.results) results.push(...data.results)
+      const [resInd, resOrg] = await Promise.all([fetch(urlInd), fetch(urlOrg)])
+      if (resInd.ok) { const d = await resInd.json(); if (d.results) results.push(...d.results) }
+      if (resOrg.ok) { const d = await resOrg.json(); if (d.results) results.push(...d.results) }
     } catch (_) {}
   }
 
-  // Also try a broader search by city+state for org type NPI-2
-  if (results.length < limit) {
-    try {
-      const url = `https://npiregistry.cms.hhs.gov/api/?version=2.1&enumeration_type=NPI-2&city=${encodeURIComponent(city)}&state=${stateAbbr}&limit=25&skip=0`
-      const res = await fetch(url)
-      if (res.ok) {
-        const data = await res.json()
-        if (data.results) results.push(...data.results)
-      }
-    } catch (_) {}
-  }
+  // Post-filter: keep only results whose taxonomies include one of our target codes
+  const codeSet = new Set(taxonomyCodes)
+  const filtered = results.filter(r =>
+    (r.taxonomies || []).some(t => codeSet.has(t.code))
+  )
 
   // Deduplicate by NPI number
   const seen = new Set()
-  return results.filter(r => {
+  return filtered.filter(r => {
     if (seen.has(r.number)) return false
     seen.add(r.number)
     return true
-  }).slice(0, limit * 3) // get extra so Claude can pick the best
+  }).slice(0, limit * 3)
 }
 
 function extractPracticeInfo(npiResult) {
