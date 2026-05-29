@@ -53,8 +53,14 @@ function LeadCard({ lead, onSave, saving }) {
           </div>
           <p style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5, marginBottom: 4 }}>{lead.fit_rationale}</p>
           <p style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}><strong>Contact:</strong> {lead.decision_maker}</p>
-          {lead.address && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>{lead.address}</p>}
-          {lead.phone && <p style={{ fontSize: 11, color: '#9ca3af' }}>{lead.phone}</p>}
+          {lead.address && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>📍 {lead.address}</p>}
+          {lead.phone && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>📞 {lead.phone}</p>}
+          {lead.npi && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, background: '#eff6ff', color: '#1e40af', padding: '2px 7px', borderRadius: 20 }}>NPI {lead.npi}</span>
+              <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#0d9e72', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
+            </div>
+          )}
         </div>
       </div>
 

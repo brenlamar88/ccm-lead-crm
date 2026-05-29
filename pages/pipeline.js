@@ -68,7 +68,13 @@ function LeadModal({ lead, onClose, onUpdate }) {
           ))}
         </div>
 
-        {lead.address && <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>📍 {lead.address}</p>}
+        {lead.address && <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>📍 {lead.address}</p>}
+        {lead.npi && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, background: '#eff6ff', color: '#1e40af', padding: '2px 7px', borderRadius: 20 }}>NPI {lead.npi}</span>
+            <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#0d9e72', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
+          </div>
+        )}
         {lead.fit_rationale && <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 16, background: '#f8fafc', padding: '10px 12px', borderRadius: 8 }}>{lead.fit_rationale}</p>}
 
         <div style={{ marginBottom: 16 }}>
