@@ -22,6 +22,50 @@ function fitColors(score) {
   return { bg: '#fee2e2', text: '#7f1d1d' }
 }
 
+// CSV export — columns in a sensible outreach order. Opens cleanly in Excel/Sheets.
+const EXPORT_COLUMNS = [
+  ['Name', l => l.name],
+  ['Fit Score', l => l.fit_score],
+  ['Medicare Likelihood', l => l.medicare_likelihood],
+  ['Status', l => l.status],
+  ['Decision Maker', l => l.decision_maker],
+  ['Providers', l => l.provider_count],
+  ['Patient Volume', l => l.patient_volume],
+  ['Phone', l => l.phone],
+  ['Website', l => l.website],
+  ['Address', l => l.address],
+  ['NPI', l => l.npi],
+  ['Market', l => (l.lead_runs ? `${l.lead_runs.city}, ${l.lead_runs.state}` : '')],
+  ['Fit Rationale', l => l.fit_rationale],
+  ['Notes', l => l.notes],
+  ['Outreach Email', l => l.outreach_email],
+  ['Created', l => (l.created_at ? new Date(l.created_at).toLocaleString() : '')],
+]
+
+function csvCell(value) {
+  if (value === null || value === undefined) return ''
+  const str = String(value)
+  // Quote if it contains characters that would break CSV parsing.
+  if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`
+  return str
+}
+
+function exportLeadsToCsv(leads) {
+  const header = EXPORT_COLUMNS.map(([label]) => csvCell(label)).join(',')
+  const rows = leads.map(l => EXPORT_COLUMNS.map(([, get]) => csvCell(get(l))).join(','))
+  // Prepend BOM so Excel reads UTF-8 correctly.
+  const csv = '﻿' + [header, ...rows].join('\r\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `ccm-leads-${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 function LeadModal({ lead, onClose, onUpdate }) {
   const [status, setStatus] = useState(lead.status || 'New')
   const [notes, setNotes] = useState(lead.notes || '')
@@ -221,7 +265,7 @@ export default function Pipeline() {
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Lead Pipeline</h1>
             <p style={{ fontSize: 13, color: '#6b7280' }}>{leads.length} total leads across {Object.values(byStatus).filter(a => a.length > 0).length} stages</p>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
             {['all', 'High', 'Medium'].map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{
                 padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -230,6 +274,15 @@ export default function Pipeline() {
                 color: filter === f ? TEAL_DARK : '#6b7280'
               }}>{f === 'all' ? 'All leads' : `${f} fit only`}</button>
             ))}
+            <button
+              onClick={() => exportLeadsToCsv(filteredLeads)}
+              disabled={filteredLeads.length === 0}
+              title="Download the leads shown as a CSV (opens in Excel)"
+              style={{
+                padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                cursor: filteredLeads.length === 0 ? 'default' : 'pointer',
+                border: 'none', background: filteredLeads.length === 0 ? '#9ca3af' : TEAL, color: '#fff'
+              }}>⬇ Export CSV{filteredLeads.length ? ` (${filteredLeads.length})` : ''}</button>
           </div>
         </div>
 
