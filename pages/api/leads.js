@@ -1,9 +1,39 @@
 import { supabase } from '../../lib/supabase'
 
+// Fields a lead row can carry that are safe to write from the client.
+const LEAD_FIELDS = [
+  'name', 'address', 'phone', 'email', 'website', 'npi',
+  'provider_count', 'patient_volume', 'medicare_likelihood',
+  'fit_score', 'fit_rationale', 'decision_maker', 'outreach_email',
+  'status', 'notes', 'direction', 'temperature',
+]
+
+// Keep only known columns from an arbitrary object.
+function pick(obj) {
+  const out = {}
+  for (const k of LEAD_FIELDS) {
+    if (obj[k] !== undefined) out[k] = obj[k]
+  }
+  return out
+}
+
 export default async function handler(req, res) {
 
-  // Save a batch of leads from a run
   if (req.method === 'POST') {
+    // Manual single-lead entry (inbound or outbound) — no generation run attached.
+    if (req.body.manual) {
+      const lead = pick(req.body.lead || {})
+      if (!lead.name) return res.status(400).json({ error: 'Lead name is required' })
+      lead.direction = lead.direction || 'Inbound'
+      lead.temperature = lead.temperature || 'Warm'
+      lead.status = lead.status || 'New'
+
+      const { data, error } = await supabase.from('leads').insert(lead).select().single()
+      if (error) return res.status(500).json({ error: error.message })
+      return res.status(200).json({ lead: data })
+    }
+
+    // Batch save from a generation run — these are outbound prospects.
     const { city, state, practiceType, count, valueProp, leads } = req.body
 
     const { data: run, error: runErr } = await supabase
@@ -19,7 +49,9 @@ export default async function handler(req, res) {
       name: l.name,
       address: l.address,
       phone: l.phone,
+      email: l.email || null,
       website: l.website,
+      npi: l.npi || null,
       provider_count: l.provider_count,
       patient_volume: l.patient_volume,
       medicare_likelihood: l.medicare_likelihood,
@@ -28,6 +60,8 @@ export default async function handler(req, res) {
       decision_maker: l.decision_maker,
       outreach_email: l.outreach_email,
       status: 'New',
+      direction: 'Outbound',
+      temperature: l.temperature || 'Cold',
     }))
 
     const { data: savedLeads, error: leadsErr } = await supabase
@@ -51,12 +85,12 @@ export default async function handler(req, res) {
     return res.status(200).json({ leads: data })
   }
 
-  // Update lead status or notes
+  // Update any editable lead fields (status, notes, direction, temperature, contact info…)
   if (req.method === 'PATCH') {
-    const { id, status, notes } = req.body
-    const updates = {}
-    if (status !== undefined) updates.status = status
-    if (notes !== undefined) updates.notes = notes
+    const { id } = req.body
+    if (!id) return res.status(400).json({ error: 'Lead id is required' })
+    const updates = pick(req.body)
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'No fields to update' })
 
     const { data, error } = await supabase
       .from('leads')

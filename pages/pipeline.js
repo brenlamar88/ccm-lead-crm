@@ -7,6 +7,10 @@ const TEAL_LIGHT = '#e6f7f2'
 const TEAL_DARK = '#076e4e'
 
 const STATUSES = ['New', 'Contacted', 'Demo Scheduled', 'Closed Won', 'Closed Lost']
+const OPEN_STATUSES = ['New', 'Contacted', 'Demo Scheduled']
+const CLOSED_STATUSES = ['Closed Won', 'Closed Lost']
+const DIRECTIONS = ['Inbound', 'Outbound']
+const TEMPERATURES = ['Cold', 'Warm', 'Hot']
 
 const STATUS_STYLES = {
   'New':            { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', emoji: '🆕' },
@@ -14,6 +18,17 @@ const STATUS_STYLES = {
   'Demo Scheduled': { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe', emoji: '📅' },
   'Closed Won':     { bg: '#d1fae5', text: '#065f46', border: '#6ee7b7', emoji: '🏆' },
   'Closed Lost':    { bg: '#fee2e2', text: '#7f1d1d', border: '#fca5a5', emoji: '❌' },
+}
+
+const DIR_STYLES = {
+  'Inbound':  { bg: '#ecfdf5', text: '#065f46', emoji: '📥' },
+  'Outbound': { bg: '#f5f3ff', text: '#5b21b6', emoji: '📤' },
+}
+
+const TEMP_STYLES = {
+  'Cold': { bg: '#eff6ff', text: '#1e40af', emoji: '🧊' },
+  'Warm': { bg: '#fff7ed', text: '#9a3412', emoji: '🌤️' },
+  'Hot':  { bg: '#fee2e2', text: '#991b1b', emoji: '🔥' },
 }
 
 function fitColors(score) {
@@ -25,13 +40,17 @@ function fitColors(score) {
 // CSV export — columns in a sensible outreach order. Opens cleanly in Excel/Sheets.
 const EXPORT_COLUMNS = [
   ['Name', l => l.name],
+  ['Direction', l => l.direction],
+  ['Temperature', l => l.temperature],
   ['Fit Score', l => l.fit_score],
   ['Medicare Likelihood', l => l.medicare_likelihood],
   ['Status', l => l.status],
+  ['Open/Closed', l => (CLOSED_STATUSES.includes(l.status) ? 'Closed' : 'Open')],
   ['Decision Maker', l => l.decision_maker],
   ['Providers', l => l.provider_count],
   ['Patient Volume', l => l.patient_volume],
   ['Phone', l => l.phone],
+  ['Email', l => l.email],
   ['Website', l => l.website],
   ['Address', l => l.address],
   ['NPI', l => l.npi],
@@ -66,15 +85,28 @@ function exportLeadsToCsv(leads) {
   URL.revokeObjectURL(url)
 }
 
+function Pill({ style, children }) {
+  return (
+    <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 20, background: style.bg, color: style.text }}>
+      {children}
+    </span>
+  )
+}
+
+const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
+
 function LeadModal({ lead, onClose, onUpdate }) {
   const [status, setStatus] = useState(lead.status || 'New')
+  const [direction, setDirection] = useState(lead.direction || 'Outbound')
+  const [temperature, setTemperature] = useState(lead.temperature || 'Cold')
   const [notes, setNotes] = useState(lead.notes || '')
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     setSaving(true)
-    await onUpdate(lead.id, { status, notes })
+    await onUpdate(lead.id, { status, direction, temperature, notes })
     setSaving(false)
     onClose()
   }
@@ -95,20 +127,24 @@ function LeadModal({ lead, onClose, onUpdate }) {
         </div>
 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-          <span style={{ ...fitColors(lead.fit_score), fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: fitColors(lead.fit_score).bg, color: fitColors(lead.fit_score).text }}>{lead.fit_score} fit</span>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#eff6ff', color: '#1e40af' }}>Medicare: {lead.medicare_likelihood}</span>
+          <Pill style={DIR_STYLES[direction] || DIR_STYLES['Outbound']}>{DIR_STYLES[direction]?.emoji} {direction}</Pill>
+          <Pill style={TEMP_STYLES[temperature] || TEMP_STYLES['Cold']}>{TEMP_STYLES[temperature]?.emoji} {temperature}</Pill>
+          {lead.fit_score && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: fitColors(lead.fit_score).bg, color: fitColors(lead.fit_score).text }}>{lead.fit_score} fit</span>}
+          {lead.medicare_likelihood && <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20, background: '#eff6ff', color: '#1e40af' }}>Medicare: {lead.medicare_likelihood}</span>}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
           {[
             ['Contact', lead.decision_maker],
-            ['Providers', `${lead.provider_count} providers`],
+            ['Providers', lead.provider_count ? `${lead.provider_count} providers` : null],
             ['Volume', lead.patient_volume],
             ['Phone', lead.phone],
+            ['Email', lead.email],
+            ['Website', lead.website],
           ].map(([k, v]) => v && (
             <div key={k} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
               <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{k}</p>
-              <p style={{ fontSize: 13, color: '#111' }}>{v}</p>
+              <p style={{ fontSize: 13, color: '#111', wordBreak: 'break-word' }}>{v}</p>
             </div>
           ))}
         </div>
@@ -122,16 +158,30 @@ function LeadModal({ lead, onClose, onUpdate }) {
         )}
         {lead.fit_rationale && <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 16, background: '#f8fafc', padding: '10px 12px', borderRadius: 8 }}>{lead.fit_rationale}</p>}
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pipeline status</label>
-          <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14 }}>
-            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div>
+            <label style={fieldLabel}>Stage</label>
+            <select value={status} onChange={e => setStatus(e.target.value)} style={fieldInput}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Direction</label>
+            <select value={direction} onChange={e => setDirection(e.target.value)} style={fieldInput}>
+              {DIRECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Temp</label>
+            <select value={temperature} onChange={e => setTemperature(e.target.value)} style={fieldInput}>
+              {TEMPERATURES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Notes</label>
-          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Call notes, next steps, contacts…" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 13, resize: 'vertical' }} />
+          <label style={fieldLabel}>Notes</label>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Call notes, next steps, contacts…" style={{ ...fieldInput, fontSize: 13, resize: 'vertical' }} />
         </div>
 
         {lead.outreach_email && (
@@ -166,9 +216,133 @@ function LeadModal({ lead, onClose, onUpdate }) {
   )
 }
 
+const EMPTY_LEAD = {
+  name: '', decision_maker: '', phone: '', email: '', website: '', address: '',
+  direction: 'Inbound', temperature: 'Warm', status: 'New',
+  fit_score: 'Medium', medicare_likelihood: 'Medium', provider_count: '', patient_volume: '', notes: '',
+}
+
+function NewLeadModal({ onClose, onCreate }) {
+  const [form, setForm] = useState(EMPTY_LEAD)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const set = (k, v) => setForm(prev => ({ ...prev, [k]: v }))
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) { setError('Name is required'); return }
+    setError(''); setSaving(true)
+    const payload = { ...form, provider_count: form.provider_count ? parseInt(form.provider_count) : null }
+    const err = await onCreate(payload)
+    setSaving(false)
+    if (err) setError(err)
+    else onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <form onSubmit={submit} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 700 }}>Add a lead</h2>
+          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={fieldLabel}>Practice / lead name *</label>
+          <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Bayou Family Medicine" style={fieldInput} autoFocus />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <div>
+            <label style={fieldLabel}>Direction</label>
+            <select value={form.direction} onChange={e => set('direction', e.target.value)} style={fieldInput}>
+              {DIRECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Temp</label>
+            <select value={form.temperature} onChange={e => set('temperature', e.target.value)} style={fieldInput}>
+              {TEMPERATURES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Stage</label>
+            <select value={form.status} onChange={e => set('status', e.target.value)} style={fieldInput}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <div>
+            <label style={fieldLabel}>Contact / decision maker</label>
+            <input value={form.decision_maker} onChange={e => set('decision_maker', e.target.value)} placeholder="e.g. Office Manager" style={fieldInput} />
+          </div>
+          <div>
+            <label style={fieldLabel}>Phone</label>
+            <input value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="(555) 123-4567" style={fieldInput} />
+          </div>
+          <div>
+            <label style={fieldLabel}>Email</label>
+            <input value={form.email} onChange={e => set('email', e.target.value)} placeholder="contact@practice.com" style={fieldInput} />
+          </div>
+          <div>
+            <label style={fieldLabel}>Website</label>
+            <input value={form.website} onChange={e => set('website', e.target.value)} placeholder="practice.com" style={fieldInput} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={fieldLabel}>Address</label>
+          <input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Street, City, ST" style={fieldInput} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+          <div>
+            <label style={fieldLabel}>Fit score</label>
+            <select value={form.fit_score} onChange={e => set('fit_score', e.target.value)} style={fieldInput}>
+              {['High', 'Medium', 'Low'].map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Medicare</label>
+            <select value={form.medicare_likelihood} onChange={e => set('medicare_likelihood', e.target.value)} style={fieldInput}>
+              {['High', 'Medium', 'Low'].map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Providers</label>
+            <input type="number" min="0" value={form.provider_count} onChange={e => set('provider_count', e.target.value)} placeholder="#" style={fieldInput} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={fieldLabel}>Notes</label>
+          <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} placeholder="How did this lead come in? Next steps…" style={{ ...fieldInput, fontSize: 13, resize: 'vertical' }} />
+        </div>
+
+        {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="submit" disabled={saving} style={{
+            flex: 1, padding: 12, background: TEAL, color: '#fff', border: 'none',
+            borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer'
+          }}>{saving ? 'Saving…' : '＋ Add lead'}</button>
+          <button type="button" onClick={onClose} style={{
+            padding: '12px 16px', background: '#f1f5f9', border: 'none',
+            borderRadius: 10, fontSize: 14, color: '#374151', cursor: 'pointer', fontWeight: 600
+          }}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 function KanbanCard({ lead, onClick, onStatusChange }) {
-  const ss = STATUS_STYLES[lead.status] || STATUS_STYLES['New']
   const fc = fitColors(lead.fit_score)
+  const dir = DIR_STYLES[lead.direction] || DIR_STYLES['Outbound']
+  const temp = TEMP_STYLES[lead.temperature] || TEMP_STYLES['Cold']
   return (
     <div onClick={onClick} style={{
       background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
@@ -180,10 +354,13 @@ function KanbanCard({ lead, onClick, onStatusChange }) {
     >
       <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 6, lineHeight: 1.3 }}>{lead.name}</p>
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 20, background: fc.bg, color: fc.text }}>{lead.fit_score} fit</span>
-        <span style={{ fontSize: 10, color: '#6b7280' }}>Medicare: {lead.medicare_likelihood}</span>
+        <Pill style={dir}>{dir.emoji} {lead.direction || 'Outbound'}</Pill>
+        <Pill style={temp}>{temp.emoji} {lead.temperature || 'Cold'}</Pill>
+        {lead.fit_score && <Pill style={fc}>{lead.fit_score} fit</Pill>}
       </div>
-      <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>👨‍⚕️ {lead.provider_count} · {lead.decision_maker}</p>
+      <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>
+        {lead.provider_count ? `👨‍⚕️ ${lead.provider_count} · ` : ''}{lead.decision_maker || '—'}
+      </p>
       {lead.notes && <p style={{ fontSize: 11, color: '#9ca3af', fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 6, marginTop: 4 }}>{lead.notes.slice(0, 60)}{lead.notes.length > 60 ? '…' : ''}</p>}
 
       <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
@@ -198,11 +375,30 @@ function KanbanCard({ lead, onClick, onStatusChange }) {
   )
 }
 
+function FilterRow({ label, options, value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: 64 }}>{label}</span>
+      {options.map(opt => (
+        <button key={opt.value} onClick={() => onChange(opt.value)} style={{
+          padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          border: `1px solid ${value === opt.value ? TEAL : '#d1d5db'}`,
+          background: value === opt.value ? TEAL_LIGHT : '#fff',
+          color: value === opt.value ? TEAL_DARK : '#6b7280'
+        }}>{opt.label}</button>
+      ))}
+    </div>
+  )
+}
+
 export default function Pipeline() {
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
-  const [filter, setFilter] = useState('all')
+  const [showNew, setShowNew] = useState(false)
+  const [fitFilter, setFitFilter] = useState('all')
+  const [dirFilter, setDirFilter] = useState('all')
+  const [tempFilter, setTempFilter] = useState('all')
   const [error, setError] = useState('')
 
   useEffect(() => { fetchLeads() }, [])
@@ -236,11 +432,37 @@ export default function Pipeline() {
     }
   }
 
-  const filteredLeads = filter === 'all' ? leads : leads.filter(l => l.fit_score === filter)
+  // Returns an error string on failure, undefined on success.
+  const createLead = async (lead) => {
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manual: true, lead }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setLeads(prev => [data.lead, ...prev])
+    } catch (err) {
+      return err.message
+    }
+  }
+
+  const filteredLeads = leads.filter(l =>
+    (fitFilter === 'all' || l.fit_score === fitFilter) &&
+    (dirFilter === 'all' || (l.direction || 'Outbound') === dirFilter) &&
+    (tempFilter === 'all' || (l.temperature || 'Cold') === tempFilter)
+  )
+
   const byStatus = STATUSES.reduce((acc, s) => {
     acc[s] = filteredLeads.filter(l => l.status === s)
     return acc
   }, {})
+
+  const openCount = filteredLeads.filter(l => OPEN_STATUSES.includes(l.status)).length
+  const closedCount = filteredLeads.filter(l => CLOSED_STATUSES.includes(l.status)).length
+  const wonCount = filteredLeads.filter(l => l.status === 'Closed Won').length
+  const lostCount = filteredLeads.filter(l => l.status === 'Closed Lost').length
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -260,30 +482,54 @@ export default function Pipeline() {
 
       <div style={{ padding: '24px 16px' }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Lead Pipeline</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>{leads.length} total leads across {Object.values(byStatus).filter(a => a.length > 0).length} stages</p>
+            <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Lead Pipeline</h1>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: '#6b7280' }}>{filteredLeads.length} leads</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#1e40af' }}>● {openCount} open</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>● {closedCount} closed</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#065f46' }}>🏆 {wonCount} won</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>❌ {lostCount} lost</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            {['all', 'High', 'Medium'].map(f => (
-              <button key={f} onClick={() => setFilter(f)} style={{
-                padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                border: `1px solid ${filter === f ? TEAL : '#d1d5db'}`,
-                background: filter === f ? TEAL_LIGHT : '#fff',
-                color: filter === f ? TEAL_DARK : '#6b7280'
-              }}>{f === 'all' ? 'All leads' : `${f} fit only`}</button>
-            ))}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button onClick={() => setShowNew(true)} style={{
+              padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              border: 'none', background: TEAL, color: '#fff'
+            }}>＋ New Lead</button>
             <button
               onClick={() => exportLeadsToCsv(filteredLeads)}
               disabled={filteredLeads.length === 0}
               title="Download the leads shown as a CSV (opens in Excel)"
               style={{
-                padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                 cursor: filteredLeads.length === 0 ? 'default' : 'pointer',
-                border: 'none', background: filteredLeads.length === 0 ? '#9ca3af' : TEAL, color: '#fff'
+                border: '1px solid #d1d5db', background: '#fff',
+                color: filteredLeads.length === 0 ? '#9ca3af' : '#374151'
               }}>⬇ Export CSV{filteredLeads.length ? ` (${filteredLeads.length})` : ''}</button>
           </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 14px' }}>
+          <FilterRow label="Source" value={dirFilter} onChange={setDirFilter} options={[
+            { value: 'all', label: 'All' },
+            { value: 'Inbound', label: '📥 Inbound' },
+            { value: 'Outbound', label: '📤 Outbound' },
+          ]} />
+          <FilterRow label="Temp" value={tempFilter} onChange={setTempFilter} options={[
+            { value: 'all', label: 'All' },
+            { value: 'Cold', label: '🧊 Cold' },
+            { value: 'Warm', label: '🌤️ Warm' },
+            { value: 'Hot', label: '🔥 Hot' },
+          ]} />
+          <FilterRow label="Fit" value={fitFilter} onChange={setFitFilter} options={[
+            { value: 'all', label: 'All' },
+            { value: 'High', label: 'High' },
+            { value: 'Medium', label: 'Medium' },
+            { value: 'Low', label: 'Low' },
+          ]} />
         </div>
 
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
@@ -297,8 +543,11 @@ export default function Pipeline() {
           <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb' }}>
             <p style={{ fontSize: 40, marginBottom: 12 }}>🏥</p>
             <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No leads yet</p>
-            <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>Generate your first batch of CCM prospects to get started.</p>
-            <Link href="/" style={{ padding: '10px 24px', background: TEAL, color: '#fff', borderRadius: 10, fontWeight: 700, fontSize: 14 }}>Generate leads →</Link>
+            <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>Add an inbound lead manually, or generate a batch of CCM prospects.</p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={() => setShowNew(true)} style={{ padding: '10px 24px', background: TEAL, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>＋ Add a lead</button>
+              <Link href="/" style={{ padding: '10px 24px', background: '#eff6ff', color: '#1e40af', borderRadius: 10, fontWeight: 700, fontSize: 14 }}>Generate leads →</Link>
+            </div>
           </div>
         ) : (
           /* Kanban board */
@@ -345,6 +594,13 @@ export default function Pipeline() {
             await updateLead(id, updates)
             setSelected(null)
           }}
+        />
+      )}
+
+      {showNew && (
+        <NewLeadModal
+          onClose={() => setShowNew(false)}
+          onCreate={createLead}
         />
       )}
     </div>
