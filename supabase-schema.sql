@@ -17,7 +17,9 @@ create table if not exists leads (
   name text,
   address text,
   phone text,
+  email text,
   website text,
+  npi text,
   provider_count int,
   patient_volume text,
   medicare_likelihood text,
@@ -25,7 +27,9 @@ create table if not exists leads (
   fit_rationale text,
   decision_maker text,
   outreach_email text,
-  status text default 'New',
+  status text default 'New' check (status in ('New', 'Contacted', 'Demo Scheduled', 'Closed Won', 'Closed Lost')),
+  direction text default 'Outbound' check (direction in ('Inbound', 'Outbound')),
+  temperature text default 'Cold' check (temperature in ('Cold', 'Warm', 'Hot')),
   notes text
 );
 
