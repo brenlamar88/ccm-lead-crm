@@ -1,11 +1,12 @@
 import { supabase } from '../../lib/supabase'
+import { requireAdmin } from '../../lib/auth'
 
 // Fields a lead row can carry that are safe to write from the client.
 const LEAD_FIELDS = [
   'name', 'address', 'phone', 'email', 'website', 'npi',
   'provider_count', 'patient_volume', 'medicare_likelihood',
   'fit_score', 'fit_rationale', 'decision_maker', 'outreach_email',
-  'status', 'notes', 'direction', 'temperature',
+  'status', 'notes', 'direction', 'temperature', 'assigned_to',
 ]
 
 // Keep only known columns from an arbitrary object.
@@ -24,6 +25,11 @@ export default async function handler(req, res) {
     if (req.body.manual) {
       const lead = pick(req.body.lead || {})
       if (!lead.name) return res.status(400).json({ error: 'Lead name is required' })
+      // Assigning a lead to a user is an admin-only action.
+      if (lead.assigned_to) {
+        const admin = await requireAdmin(req)
+        if (admin.error) return res.status(admin.status).json({ error: admin.error })
+      }
       lead.direction = lead.direction || 'Inbound'
       lead.temperature = lead.temperature || 'Warm'
       lead.status = lead.status || 'New'
@@ -91,6 +97,11 @@ export default async function handler(req, res) {
     if (!id) return res.status(400).json({ error: 'Lead id is required' })
     const updates = pick(req.body)
     if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'No fields to update' })
+    // Reassigning a lead is an admin-only action.
+    if ('assigned_to' in updates) {
+      const admin = await requireAdmin(req)
+      if (admin.error) return res.status(admin.status).json({ error: admin.error })
+    }
 
     const { data, error } = await supabase
       .from('leads')

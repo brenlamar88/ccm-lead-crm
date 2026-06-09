@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
+import { authedFetch } from '../lib/authedFetch'
 
 const TEAL = '#0d9e72'
 const TEAL_LIGHT = '#e6f7f2'
@@ -37,6 +38,13 @@ function fitColors(score) {
   return { bg: '#fee2e2', text: '#7f1d1d' }
 }
 
+// Resolve a user id to a display name from the loaded users list.
+function userName(users, id) {
+  if (!id) return ''
+  const u = (users || []).find(x => x.id === id)
+  return u ? (u.full_name || u.email) : ''
+}
+
 // CSV export — columns in a sensible outreach order. Opens cleanly in Excel/Sheets.
 const EXPORT_COLUMNS = [
   ['Name', l => l.name],
@@ -54,6 +62,7 @@ const EXPORT_COLUMNS = [
   ['Website', l => l.website],
   ['Address', l => l.address],
   ['NPI', l => l.npi],
+  ['Assigned To', l => l._assignee],
   ['Market', l => (l.lead_runs ? `${l.lead_runs.city}, ${l.lead_runs.state}` : '')],
   ['Fit Rationale', l => l.fit_rationale],
   ['Notes', l => l.notes],
@@ -96,17 +105,21 @@ function Pill({ style, children }) {
 const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
 const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
 
-function LeadModal({ lead, onClose, onUpdate }) {
+function LeadModal({ lead, onClose, onUpdate, users, isAdmin }) {
   const [status, setStatus] = useState(lead.status || 'New')
   const [direction, setDirection] = useState(lead.direction || 'Outbound')
   const [temperature, setTemperature] = useState(lead.temperature || 'Cold')
+  const [assignedTo, setAssignedTo] = useState(lead.assigned_to || '')
   const [notes, setNotes] = useState(lead.notes || '')
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     setSaving(true)
-    await onUpdate(lead.id, { status, direction, temperature, notes })
+    const updates = { status, direction, temperature, notes }
+    // Only admins may change assignment; include the field only when allowed.
+    if (isAdmin) updates.assigned_to = assignedTo || null
+    await onUpdate(lead.id, updates)
     setSaving(false)
     onClose()
   }
@@ -177,6 +190,20 @@ function LeadModal({ lead, onClose, onUpdate }) {
               {TEMPERATURES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={fieldLabel}>Assigned to {!isAdmin && <span style={{ textTransform: 'none', fontWeight: 500, color: '#9ca3af' }}>· admin only</span>}</label>
+          {isAdmin ? (
+            <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={fieldInput}>
+              <option value="">— Unassigned —</option>
+              {(users || []).map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
+            </select>
+          ) : (
+            <p style={{ fontSize: 13, color: '#374151', background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+              {userName(users, lead.assigned_to) || 'Unassigned'}
+            </p>
+          )}
         </div>
 
         <div style={{ marginBottom: 16 }}>
@@ -339,10 +366,11 @@ function NewLeadModal({ onClose, onCreate }) {
   )
 }
 
-function KanbanCard({ lead, onClick, onStatusChange }) {
+function KanbanCard({ lead, onClick, onStatusChange, users }) {
   const fc = fitColors(lead.fit_score)
   const dir = DIR_STYLES[lead.direction] || DIR_STYLES['Outbound']
   const temp = TEMP_STYLES[lead.temperature] || TEMP_STYLES['Cold']
+  const assignee = userName(users, lead.assigned_to)
   return (
     <div onClick={onClick} style={{
       background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
@@ -360,6 +388,9 @@ function KanbanCard({ lead, onClick, onStatusChange }) {
       </div>
       <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>
         {lead.provider_count ? `👨‍⚕️ ${lead.provider_count} · ` : ''}{lead.decision_maker || '—'}
+      </p>
+      <p style={{ fontSize: 11, color: assignee ? '#0d9e72' : '#9ca3af', fontWeight: assignee ? 600 : 400, marginBottom: 6 }}>
+        {assignee ? `👤 ${assignee}` : '○ Unassigned'}
       </p>
       {lead.notes && <p style={{ fontSize: 11, color: '#9ca3af', fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 6, marginTop: 4 }}>{lead.notes.slice(0, 60)}{lead.notes.length > 60 ? '…' : ''}</p>}
 
@@ -399,14 +430,19 @@ export default function Pipeline() {
   const [fitFilter, setFitFilter] = useState('all')
   const [dirFilter, setDirFilter] = useState('all')
   const [tempFilter, setTempFilter] = useState('all')
+  const [assigneeFilter, setAssigneeFilter] = useState('all')
+  const [users, setUsers] = useState([])
+  const [me, setMe] = useState(null)
   const [error, setError] = useState('')
 
-  useEffect(() => { fetchLeads() }, [])
+  const isAdmin = me?.role === 'admin'
+
+  useEffect(() => { fetchLeads(); fetchUsers() }, [])
 
   const fetchLeads = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/leads')
+      const res = await authedFetch('/api/leads')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setLeads(data.leads || [])
@@ -417,9 +453,17 @@ export default function Pipeline() {
     }
   }
 
+  const fetchUsers = async () => {
+    try {
+      const res = await authedFetch('/api/users')
+      const data = await res.json()
+      if (res.ok) { setUsers(data.users || []); setMe(data.me || null) }
+    } catch (_) { /* assignee names are best-effort */ }
+  }
+
   const updateLead = async (id, updates) => {
     try {
-      const res = await fetch('/api/leads', {
+      const res = await authedFetch('/api/leads', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, ...updates }),
@@ -435,7 +479,7 @@ export default function Pipeline() {
   // Returns an error string on failure, undefined on success.
   const createLead = async (lead) => {
     try {
-      const res = await fetch('/api/leads', {
+      const res = await authedFetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manual: true, lead }),
@@ -451,8 +495,13 @@ export default function Pipeline() {
   const filteredLeads = leads.filter(l =>
     (fitFilter === 'all' || l.fit_score === fitFilter) &&
     (dirFilter === 'all' || (l.direction || 'Outbound') === dirFilter) &&
-    (tempFilter === 'all' || (l.temperature || 'Cold') === tempFilter)
+    (tempFilter === 'all' || (l.temperature || 'Cold') === tempFilter) &&
+    (assigneeFilter === 'all' ||
+      (assigneeFilter === 'unassigned' ? !l.assigned_to : l.assigned_to === assigneeFilter))
   )
+
+  // Enrich rows with a resolved assignee name for CSV export.
+  const exportRows = filteredLeads.map(l => ({ ...l, _assignee: userName(users, l.assigned_to) }))
 
   const byStatus = STATUSES.reduce((acc, s) => {
     acc[s] = filteredLeads.filter(l => l.status === s)
@@ -476,6 +525,7 @@ export default function Pipeline() {
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Generate</Link>
           <Link href="/pipeline" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: TEAL_LIGHT, color: TEAL_DARK }}>Pipeline</Link>
+          {isAdmin && <Link href="/users" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Users</Link>}
           <button onClick={() => supabase.auth.signOut()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280', background: 'transparent', border: '1px solid #e5e7eb', cursor: 'pointer', marginLeft: 8 }}>Sign out</button>
         </div>
       </nav>
@@ -499,7 +549,7 @@ export default function Pipeline() {
               border: 'none', background: TEAL, color: '#fff'
             }}>＋ New Lead</button>
             <button
-              onClick={() => exportLeadsToCsv(filteredLeads)}
+              onClick={() => exportLeadsToCsv(exportRows)}
               disabled={filteredLeads.length === 0}
               title="Download the leads shown as a CSV (opens in Excel)"
               style={{
@@ -529,6 +579,11 @@ export default function Pipeline() {
             { value: 'High', label: 'High' },
             { value: 'Medium', label: 'Medium' },
             { value: 'Low', label: 'Low' },
+          ]} />
+          <FilterRow label="Owner" value={assigneeFilter} onChange={setAssigneeFilter} options={[
+            { value: 'all', label: 'All' },
+            { value: 'unassigned', label: '○ Unassigned' },
+            ...users.map(u => ({ value: u.id, label: `👤 ${u.full_name || u.email}` })),
           ]} />
         </div>
 
@@ -573,6 +628,7 @@ export default function Pipeline() {
                         <KanbanCard
                           key={lead.id}
                           lead={lead}
+                          users={users}
                           onClick={() => setSelected(lead)}
                           onStatusChange={(id, newStatus) => updateLead(id, { status: newStatus })}
                         />
@@ -589,6 +645,8 @@ export default function Pipeline() {
       {selected && (
         <LeadModal
           lead={selected}
+          users={users}
+          isAdmin={isAdmin}
           onClose={() => setSelected(null)}
           onUpdate={async (id, updates) => {
             await updateLead(id, updates)

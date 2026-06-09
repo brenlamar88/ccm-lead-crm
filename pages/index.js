@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
+import { authedFetch } from '../lib/authedFetch'
 
 const TEAL = '#0d9e72'
 const TEAL_LIGHT = '#e6f7f2'
@@ -121,6 +122,14 @@ export default function Home() {
   const [done, setDone] = useState(false)
   const [saving, setSaving] = useState(false)
   const [savedAll, setSavedAll] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    authedFetch('/api/users')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setIsAdmin(d?.me?.role === 'admin'))
+      .catch(() => {})
+  }, [])
 
   const generate = async () => {
     if (!city.trim() || !state.trim()) { setError('Please enter city and state.'); return }
@@ -146,7 +155,7 @@ export default function Home() {
   const saveAll = async () => {
     setSaving(true)
     try {
-      const res = await fetch('/api/leads', {
+      const res = await authedFetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ city, state, practiceType: ptype, count: parseInt(cnt), valueProp: vp, leads }),
@@ -178,6 +187,7 @@ export default function Home() {
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: TEAL_LIGHT, color: TEAL_DARK }}>Generate</Link>
           <Link href="/pipeline" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Pipeline</Link>
+          {isAdmin && <Link href="/users" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Users</Link>}
           <button onClick={() => supabase.auth.signOut()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280', background: 'transparent', border: '1px solid #e5e7eb', cursor: 'pointer', marginLeft: 8 }}>Sign out</button>
         </div>
       </nav>
