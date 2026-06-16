@@ -62,6 +62,51 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function handle_new_user();
 
+-- Companies (accounts) and Contacts (people).
+create table if not exists companies (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  name text not null,
+  type text,
+  website text,
+  phone text,
+  email text,
+  address text,
+  city text,
+  state text,
+  zip text,
+  npi text,
+  provider_count int,
+  patient_volume text,
+  medicare_likelihood text,
+  fit_score text,
+  fit_rationale text,
+  notes text,
+  assigned_to uuid references profiles(id) on delete set null
+);
+
+create table if not exists contacts (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  company_id uuid references companies(id) on delete cascade,
+  first_name text,
+  last_name text,
+  title text,
+  email text,
+  phone text,
+  mobile text,
+  is_primary boolean default false,
+  notes text,
+  assigned_to uuid references profiles(id) on delete set null
+);
+
+alter table companies enable row level security;
+alter table contacts enable row level security;
+create policy "allow all" on companies for all using (true) with check (true);
+create policy "allow all" on contacts for all using (true) with check (true);
+
+-- leads.company_id / leads.contact_id link each pipeline deal to its account.
+
 -- Enable RLS but allow all for now (add auth later)
 alter table lead_runs enable row level security;
 alter table leads enable row level security;

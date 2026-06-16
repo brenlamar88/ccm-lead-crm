@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 import { authedFetch } from '../lib/authedFetch'
+import Nav from '../components/Nav'
 
 const TEAL = '#0d9e72'
 const TEAL_LIGHT = '#e6f7f2'
@@ -48,6 +49,7 @@ function userName(users, id) {
 // CSV export — columns in a sensible outreach order. Opens cleanly in Excel/Sheets.
 const EXPORT_COLUMNS = [
   ['Name', l => l.name],
+  ['Company', l => l.companies?.name],
   ['Direction', l => l.direction],
   ['Temperature', l => l.temperature],
   ['Fit Score', l => l.fit_score],
@@ -105,24 +107,40 @@ function Pill({ style, children }) {
 const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
 const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
 
-function LeadModal({ lead, onClose, onUpdate, users, isAdmin }) {
+function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
   const [status, setStatus] = useState(lead.status || 'New')
   const [direction, setDirection] = useState(lead.direction || 'Outbound')
   const [temperature, setTemperature] = useState(lead.temperature || 'Cold')
   const [assignedTo, setAssignedTo] = useState(lead.assigned_to || '')
+  const [companyId, setCompanyId] = useState(lead.company_id || '')
+  const [contactId, setContactId] = useState(lead.contact_id || '')
+  const [companyContacts, setCompanyContacts] = useState([])
   const [notes, setNotes] = useState(lead.notes || '')
   const [copied, setCopied] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  // Load the chosen company's contacts so a primary contact can be picked.
+  useEffect(() => {
+    if (!companyId) { setCompanyContacts([]); return }
+    let active = true
+    authedFetch(`/api/contacts?company_id=${companyId}`)
+      .then(r => r.ok ? r.json() : { contacts: [] })
+      .then(d => { if (active) setCompanyContacts(d.contacts || []) })
+      .catch(() => {})
+    return () => { active = false }
+  }, [companyId])
+
   const save = async () => {
     setSaving(true)
-    const updates = { status, direction, temperature, notes }
+    const updates = { status, direction, temperature, notes, company_id: companyId || null, contact_id: contactId || null }
     // Only admins may change assignment; include the field only when allowed.
     if (isAdmin) updates.assigned_to = assignedTo || null
     await onUpdate(lead.id, updates)
     setSaving(false)
     onClose()
   }
+
+  const onCompanyChange = (val) => { setCompanyId(val); setContactId('') }
 
   const copy = () => {
     navigator.clipboard.writeText(lead.outreach_email || '').then(() => {
@@ -204,6 +222,26 @@ function LeadModal({ lead, onClose, onUpdate, users, isAdmin }) {
               {userName(users, lead.assigned_to) || 'Unassigned'}
             </p>
           )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div>
+            <label style={fieldLabel}>Company</label>
+            <select value={companyId} onChange={e => onCompanyChange(e.target.value)} style={fieldInput}>
+              <option value="">— None —</option>
+              {(companies || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={fieldLabel}>Primary contact</label>
+            <select value={contactId} onChange={e => setContactId(e.target.value)} style={fieldInput} disabled={!companyId}>
+              <option value="">{companyId ? '— None —' : 'Pick a company first'}</option>
+              {companyContacts.map(ct => {
+                const n = `${ct.first_name || ''} ${ct.last_name || ''}`.trim() || ct.title || ct.email || 'Contact'
+                return <option key={ct.id} value={ct.id}>{n}</option>
+              })}
+            </select>
+          </div>
         </div>
 
         <div style={{ marginBottom: 16 }}>
@@ -433,11 +471,20 @@ export default function Pipeline() {
   const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [users, setUsers] = useState([])
   const [me, setMe] = useState(null)
+  const [companies, setCompanies] = useState([])
   const [error, setError] = useState('')
 
   const isAdmin = me?.role === 'admin'
 
-  useEffect(() => { fetchLeads(); fetchUsers() }, [])
+  useEffect(() => { fetchLeads(); fetchUsers(); fetchCompanies() }, [])
+
+  const fetchCompanies = async () => {
+    try {
+      const res = await authedFetch('/api/companies')
+      const data = await res.json()
+      if (res.ok) setCompanies((data.companies || []).map(c => ({ id: c.id, name: c.name })))
+    } catch (_) { /* best-effort */ }
+  }
 
   const fetchLeads = async () => {
     setLoading(true)
@@ -515,20 +562,7 @@ export default function Pipeline() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-      {/* Nav */}
-      <nav style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, background: TEAL, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🏥</div>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>CCM Lead CRM</span>
-          <span style={{ fontSize: 11, color: '#6b7280', background: '#f1f5f9', padding: '2px 8px', borderRadius: 20 }}>Anchored Health</span>
-        </div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <Link href="/" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Generate</Link>
-          <Link href="/pipeline" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, background: TEAL_LIGHT, color: TEAL_DARK }}>Pipeline</Link>
-          {isAdmin && <Link href="/users" style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280' }}>Users</Link>}
-          <button onClick={() => supabase.auth.signOut()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280', background: 'transparent', border: '1px solid #e5e7eb', cursor: 'pointer', marginLeft: 8 }}>Sign out</button>
-        </div>
-      </nav>
+      <Nav active="pipeline" isAdmin={isAdmin} />
 
       <div style={{ padding: '24px 16px' }}>
         {/* Header */}
@@ -646,6 +680,7 @@ export default function Pipeline() {
         <LeadModal
           lead={selected}
           users={users}
+          companies={companies}
           isAdmin={isAdmin}
           onClose={() => setSelected(null)}
           onUpdate={async (id, updates) => {
