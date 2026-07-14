@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       .order('created_at', { ascending: true })
     if (error) return res.status(500).json({ error: error.message })
 
-    return res.status(200).json({ users: data, me: caller.profile })
+    return res.status(200).json({ users: data, me: caller.profile, userMgmtEnabled: !!supabaseAdmin })
   }
 
   // Everything below mutates users/roles and is admin-only + needs service role.

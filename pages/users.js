@@ -35,6 +35,7 @@ export default function Users() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState(EMPTY_NEW)
   const [busyId, setBusyId] = useState(null)
+  const [enabled, setEnabled] = useState(true)
 
   useEffect(() => { load() }, [])
 
@@ -46,6 +47,7 @@ export default function Users() {
       if (!res.ok) throw new Error(data.error)
       setUsers(data.users || [])
       setMe(data.me || null)
+      setEnabled(data.userMgmtEnabled !== false)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -141,12 +143,40 @@ export default function Users() {
             <p style={{ fontSize: 13, color: '#6b7280' }}>{users.length} {users.length === 1 ? 'user' : 'users'} · admins can assign leads and manage accounts</p>
           </div>
           {isAdmin && (
-            <button onClick={() => { setShowAdd(s => !s); setError('') }} style={{
-              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              border: 'none', background: TEAL, color: '#fff'
+            <button onClick={() => { setShowAdd(s => !s); setError('') }} disabled={!enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} style={{
+              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: enabled ? 'pointer' : 'not-allowed',
+              border: 'none', background: enabled ? TEAL : '#9ca3af', color: '#fff'
             }}>{showAdd ? '✕ Cancel' : '＋ Add User'}</button>
           )}
         </div>
+
+        {isAdmin && !enabled && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 12, padding: '14px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.6 }}>
+            <p style={{ fontWeight: 700, marginBottom: 4 }}>⚠️ User management isn't fully enabled yet</p>
+            <p style={{ marginBottom: 6 }}>You can view users and change roles, but <strong>adding, removing, and resetting passwords</strong> need the Supabase service-role key. To enable it:</p>
+            <ol style={{ margin: 0, paddingLeft: 18 }}>
+              <li>Supabase → project <strong>supabase-yellow-kite</strong> → Settings → API → copy the <strong>service_role</strong> secret</li>
+              <li>Vercel → <strong>ccm-lead-crm</strong> → Settings → Environment Variables → add <code>SUPABASE_SERVICE_ROLE_KEY</code> (Production + Preview)</li>
+              <li>Redeploy</li>
+            </ol>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Roles & permissions</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ROLE_STYLES.admin.bg, color: ROLE_STYLES.admin.text, height: 'fit-content' }}>Admin</span>
+                <p style={{ fontSize: 12, color: '#374151', lineHeight: 1.5 }}>Full access: manage users & roles, add/remove accounts, reset passwords, and assign leads/companies/contacts to owners.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ROLE_STYLES.member.bg, color: ROLE_STYLES.member.text, height: 'fit-content' }}>Member</span>
+                <p style={{ fontSize: 12, color: '#374151', lineHeight: 1.5 }}>Full CRM use: generate leads, work the pipeline, and manage companies & contacts. Cannot manage users or assign owners.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {notice && <div style={{ background: '#d1fae5', color: '#065f46', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16, whiteSpace: 'pre-wrap' }}>{notice}</div>}
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
@@ -208,11 +238,11 @@ export default function Users() {
                     {u.full_name && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{u.email}</p>}
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button disabled={busy} onClick={() => toggleRole(u)} style={btn('#eff6ff', '#1e40af')}>
+                    <button disabled={busy || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => toggleRole(u)} style={btn('#eff6ff', '#1e40af', busy || !enabled)}>
                       {u.role === 'admin' ? 'Make member' : 'Make admin'}
                     </button>
-                    <button disabled={busy} onClick={() => resetPassword(u)} style={btn('#fff7ed', '#9a3412')}>Reset password</button>
-                    <button disabled={busy || isSelf} onClick={() => removeUser(u)} style={btn('#fee2e2', '#991b1b', busy || isSelf)}>Remove</button>
+                    <button disabled={busy || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => resetPassword(u)} style={btn('#fff7ed', '#9a3412', busy || !enabled)}>Reset password</button>
+                    <button disabled={busy || isSelf || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => removeUser(u)} style={btn('#fee2e2', '#991b1b', busy || isSelf || !enabled)}>Remove</button>
                   </div>
                 </div>
               )
