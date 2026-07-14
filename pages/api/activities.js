@@ -16,6 +16,14 @@ function pick(obj) {
 
 const SELECT = '*, leads(id, name, status), companies(id, name), contacts(id, first_name, last_name, title), rep:profiles(id, full_name, email)'
 
+// True until the activities migration has been run. Lets the app deploy and
+// degrade gracefully (empty state) instead of erroring before the table exists.
+function isMissingTable(error) {
+  if (!error) return false
+  const c = error.code || ''
+  return c === '42P01' || c === 'PGRST205' || /does not exist|schema cache/i.test(error.message || '')
+}
+
 export default async function handler(req, res) {
   const caller = await getCaller(req)
   if (caller.error) return res.status(caller.status).json({ error: caller.error })
@@ -31,7 +39,10 @@ export default async function handler(req, res) {
       query = query.eq('followup_done', false).not('followup_date', 'is', null).lte('followup_date', req.query.due)
     }
     const { data, error } = await query
-    if (error) return res.status(500).json({ error: error.message })
+    if (error) {
+      if (isMissingTable(error)) return res.status(200).json({ activities: [], migrationPending: true })
+      return res.status(500).json({ error: error.message })
+    }
     return res.status(200).json({ activities: data })
   }
 
@@ -52,7 +63,10 @@ export default async function handler(req, res) {
     }
 
     const { data, error } = await supabase.from('activities').insert(activity).select(SELECT).single()
-    if (error) return res.status(500).json({ error: error.message })
+    if (error) {
+      if (isMissingTable(error)) return res.status(503).json({ error: 'Activity tracking is not enabled yet — run the activities migration.' })
+      return res.status(500).json({ error: error.message })
+    }
     return res.status(200).json({ activity: data })
   }
 

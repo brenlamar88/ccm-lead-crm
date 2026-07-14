@@ -142,12 +142,19 @@ export default async function handler(req, res) {
     // Stamp when the pipeline stage changes so reports can measure won/lost by week.
     if ('status' in updates) updates.status_changed_at = new Date().toISOString()
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('leads')
       .update(updates)
       .eq('id', id)
       .select()
       .single()
+
+    // Tolerate the status_changed_at column not existing yet (pre-migration):
+    // retry without it so stage changes never break.
+    if (error && 'status_changed_at' in updates && /status_changed_at|does not exist|schema cache/i.test(error.message || '')) {
+      delete updates.status_changed_at
+      ;({ data, error } = await supabase.from('leads').update(updates).eq('id', id).select().single())
+    }
 
     if (error) return res.status(500).json({ error: error.message })
     return res.status(200).json({ lead: data })
