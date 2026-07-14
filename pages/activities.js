@@ -61,13 +61,13 @@ export default function Activities() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="activities" isAdmin={isAdmin} />
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Activity Log</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>{filtered.length} of {activities.length} contacts</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{filtered.length} of {activities.length} contacts</p>
           </div>
           <button onClick={() => { setShowAdd(s => !s); setEditing(null) }} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none', background: TEAL, color: '#fff' }}>
             {showAdd ? '✕ Cancel' : '＋ Log Contact'}
@@ -81,7 +81,7 @@ export default function Activities() {
         )}
 
         {/* Filters */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 14px', marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px', marginBottom: 16, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={rep} onChange={e => setRep(e.target.value)} style={sel}>
             <option value="all">All reps</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
@@ -90,9 +90,9 @@ export default function Activities() {
             <option value="all">All types</option>
             {ACTIVITY_TYPES.map(t => <option key={t.key} value={t.key}>{t.emoji} {t.key}</option>)}
           </select>
-          <label style={{ fontSize: 12, color: '#6b7280' }}>From <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={sel} /></label>
-          <label style={{ fontSize: 12, color: '#6b7280' }}>To <input type="date" value={to} onChange={e => setTo(e.target.value)} style={sel} /></label>
-          <label style={{ fontSize: 12, color: '#374151', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <label style={{ fontSize: 12, color: 'var(--muted)' }}>From <input type="date" value={from} onChange={e => setFrom(e.target.value)} style={sel} /></label>
+          <label style={{ fontSize: 12, color: 'var(--muted)' }}>To <input type="date" value={to} onChange={e => setTo(e.target.value)} style={sel} /></label>
+          <label style={{ fontSize: 12, color: 'var(--ink-2)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <input type="checkbox" checked={dueOnly} onChange={e => setDueOnly(e.target.checked)} /> Due follow-ups
           </label>
         </div>
@@ -100,7 +100,7 @@ export default function Activities() {
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '50px', color: '#6b7280' }}>⏳ Loading activity…</div>
+          <div style={{ textAlign: 'center', padding: '50px', color: 'var(--muted)' }}>⏳ Loading activity…</div>
         ) : (
           <ActivityList
             activities={filtered}
@@ -116,4 +116,4 @@ export default function Activities() {
   )
 }
 
-const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid #d1d5db', fontSize: 13 }
+const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line-strong)', fontSize: 13 }

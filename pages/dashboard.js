@@ -79,13 +79,13 @@ export default function Dashboard() {
   const lostCount = repLeads.filter(l => l.status === 'Closed Lost').length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="dashboard" isAdmin={isAdmin} />
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Dashboard</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>{from === to ? from : `${from} → ${to}`}{rep !== 'all' ? ` · ${repName(users, rep)}` : ' · all reps'}</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{from === to ? from : `${from} → ${to}`}{rep !== 'all' ? ` · ${repName(users, rep)}` : ' · all reps'}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <select value={rep} onChange={e => setRep(e.target.value)} style={sel}>
@@ -101,13 +101,13 @@ export default function Dashboard() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '50px', color: '#6b7280' }}>⏳ Loading…</div>
+          <div style={{ textAlign: 'center', padding: '50px', color: 'var(--muted)' }}>⏳ Loading…</div>
         ) : (
           <>
             {/* KPI cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 18 }}>
               {[
-                ['Contacts', totalContacts, TEAL_DARK, '#e6f7f2'],
+                ['Contacts', totalContacts, TEAL_DARK, 'var(--brand-50)'],
                 ['Leads worked', uniqueLeads, '#1e40af', '#eff6ff'],
                 ['Follow-ups due', dueFollowups || 0, '#9a3412', '#fff7ed'],
                 ['Overdue', overdue, '#991b1b', '#fee2e2'],
@@ -124,8 +124,8 @@ export default function Dashboard() {
               <Card title="Contacts by day">
                 {perDay.map(p => (
                   <div key={p.d} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                    <span style={{ fontSize: 11, color: '#6b7280', width: 78 }}>{p.d.slice(5)}</span>
-                    <div style={{ flex: 1, background: '#f1f5f9', borderRadius: 6, height: 16, overflow: 'hidden' }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', width: 78 }}>{p.d.slice(5)}</span>
+                    <div style={{ flex: 1, background: 'var(--surface-2)', borderRadius: 6, height: 16, overflow: 'hidden' }}>
                       <div style={{ width: `${(p.count / maxDay) * 100}%`, background: TEAL, height: '100%' }} />
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 600, width: 24, textAlign: 'right' }}>{p.count}</span>
@@ -135,7 +135,7 @@ export default function Dashboard() {
 
               {/* By type */}
               <Card title="By contact type">
-                {byType.length === 0 ? <p style={{ fontSize: 12, color: '#9ca3af' }}>No contacts in range.</p> : byType.map(t => (
+                {byType.length === 0 ? <p style={{ fontSize: 12, color: 'var(--faint)' }}>No contacts in range.</p> : byType.map(t => (
                   <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: t.bg, color: t.text, width: 96 }}>{t.emoji} {t.key}</span>
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{t.count}</span>
@@ -153,10 +153,10 @@ export default function Dashboard() {
               {/* Per-rep leaderboard */}
               {rep === 'all' && (
                 <Card title="By rep">
-                  {perRep.length === 0 ? <p style={{ fontSize: 12, color: '#9ca3af' }}>No contacts in range.</p> : perRep.map(r => (
+                  {perRep.length === 0 ? <p style={{ fontSize: 12, color: 'var(--faint)' }}>No contacts in range.</p> : perRep.map(r => (
                     <div key={r.u.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
                       <span>{r.u.full_name || r.u.email}</span>
-                      <span style={{ color: '#6b7280' }}>{r.contacts} contacts · {r.leads} leads</span>
+                      <span style={{ color: 'var(--muted)' }}>{r.contacts} contacts · {r.leads} leads</span>
                     </div>
                   ))}
                 </Card>
@@ -171,8 +171,8 @@ export default function Dashboard() {
 
 function Card({ title, children }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>{title}</p>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: 16 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>{title}</p>
       {children}
     </div>
   )
@@ -185,5 +185,5 @@ function Row({ label, value, color }) {
   )
 }
 
-const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid #d1d5db', fontSize: 13 }
-const presetBtn = { padding: '7px 12px', borderRadius: 9, border: '1px solid #d1d5db', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer' }
+const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line-strong)', fontSize: 13 }
+const presetBtn = { padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line-strong)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', cursor: 'pointer' }

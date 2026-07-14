@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { authedFetch } from '../lib/authedFetch'
 
-export const TEAL = '#0d9e72'
-export const TEAL_DARK = '#076e4e'
+export const TEAL = 'var(--brand)'
+export const TEAL_DARK = 'var(--brand-700)'
 
 // The contact types an SDR can log.
 export const ACTIVITY_TYPES = [
@@ -19,8 +19,8 @@ export function typeStyle(type) {
   return ACTIVITY_TYPES.find(t => t.key === type) || ACTIVITY_TYPES[ACTIVITY_TYPES.length - 1]
 }
 
-const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
-const fieldInput = { width: '100%', padding: '9px 11px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 13, boxSizing: 'border-box' }
+const fieldLabel = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const fieldInput = { width: '100%', padding: '9px 11px', borderRadius: 10, border: '1px solid var(--line-strong)', fontSize: 13, boxSizing: 'border-box' }
 
 // Convert a Date to the value a <input type="datetime-local"> expects (local time).
 function toLocalInput(d) {
@@ -78,7 +78,7 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
   }
 
   return (
-    <form onSubmit={submit} style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 12, padding: 14 }}>
+    <form onSubmit={submit} style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 12, padding: 14 }}>
       <div style={{ display: 'grid', gridTemplateColumns: fixedLeadId ? '1fr 1fr' : '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         {!fixedLeadId && (
           <div>
@@ -123,7 +123,7 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
         <button type="submit" disabled={saving} style={{ padding: '8px 16px', background: TEAL, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           {saving ? 'Saving…' : editing ? 'Save' : '＋ Log contact'}
         </button>
-        {onCancel && <button type="button" onClick={onCancel} style={{ padding: '8px 14px', background: '#f1f5f9', border: 'none', borderRadius: 9, fontSize: 13, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>}
+        {onCancel && <button type="button" onClick={onCancel} style={{ padding: '8px 14px', background: 'var(--surface-2)', border: 'none', borderRadius: 9, fontSize: 13, color: 'var(--ink-2)', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>}
       </div>
     </form>
   )
@@ -132,7 +132,7 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
 // Render a list of activities (optionally showing which lead each is on).
 export function ActivityList({ activities, users, showLead, onEdit, onDelete, emptyText }) {
   if (!activities || activities.length === 0) {
-    return <p style={{ fontSize: 12, color: '#9ca3af', padding: '8px 0' }}>{emptyText || 'No activity logged yet.'}</p>
+    return <p style={{ fontSize: 12, color: 'var(--faint)', padding: '8px 0' }}>{emptyText || 'No activity logged yet.'}</p>
   }
   const today = new Date().toISOString().slice(0, 10)
   return (
@@ -141,22 +141,22 @@ export function ActivityList({ activities, users, showLead, onEdit, onDelete, em
         const ts = typeStyle(a.type)
         const overdue = a.followup_date && !a.followup_done && a.followup_date < today
         return (
-          <div key={a.id} style={{ border: '1px solid #f1f5f9', borderRadius: 10, padding: '10px 12px' }}>
+          <div key={a.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ts.bg, color: ts.text }}>{ts.emoji} {a.type}</span>
               {showLead && a.leads?.name && <span style={{ fontSize: 12, fontWeight: 600 }}>{a.leads.name}</span>}
-              <span style={{ fontSize: 11, color: '#9ca3af' }}>
+              <span style={{ fontSize: 11, color: 'var(--faint)' }}>
                 {a.occurred_at ? new Date(a.occurred_at).toLocaleString() : ''}
               </span>
-              {repName(users, a.rep_id) && <span style={{ fontSize: 11, color: '#6b7280' }}>· {repName(users, a.rep_id)}</span>}
+              {repName(users, a.rep_id) && <span style={{ fontSize: 11, color: 'var(--muted)' }}>· {repName(users, a.rep_id)}</span>}
               <span style={{ flex: 1 }} />
               {onEdit && <button onClick={() => onEdit(a)} style={miniBtn('#eff6ff', '#1e40af')}>Edit</button>}
               {onDelete && <button onClick={() => onDelete(a)} style={miniBtn('#fee2e2', '#991b1b')}>Delete</button>}
             </div>
-            {a.notes && <p style={{ fontSize: 13, color: '#374151', marginTop: 6, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{a.notes}</p>}
+            {a.notes && <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{a.notes}</p>}
             {(a.next_action || a.followup_date) && (
               <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-                {a.next_action && <span style={{ fontSize: 12, color: '#374151' }}>➡️ {a.next_action}</span>}
+                {a.next_action && <span style={{ fontSize: 12, color: 'var(--ink-2)' }}>➡️ {a.next_action}</span>}
                 {a.followup_date && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: overdue ? '#991b1b' : '#065f46' }}>
                     📅 Follow up {a.followup_date}{overdue ? ' (overdue)' : ''}
@@ -172,7 +172,7 @@ export function ActivityList({ activities, users, showLead, onEdit, onDelete, em
 }
 
 function miniBtn(bg, color) {
-  return { fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 7, border: '1px solid #e5e7eb', background: bg, color, cursor: 'pointer' }
+  return { fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 7, border: '1px solid var(--line)', background: bg, color, cursor: 'pointer' }
 }
 
 // Per-lead activity log: fetches the lead's activities and shows list + add form.
@@ -200,7 +200,7 @@ export function LeadActivity({ leadId }) {
     <div>
       <ActivityForm fixedLeadId={leadId} onSaved={onSaved} />
       <div style={{ marginTop: 12 }}>
-        {loading ? <p style={{ fontSize: 12, color: '#9ca3af' }}>Loading…</p> : <ActivityList activities={activities} onDelete={onDelete} />}
+        {loading ? <p style={{ fontSize: 12, color: 'var(--faint)' }}>Loading…</p> : <ActivityList activities={activities} onDelete={onDelete} />}
       </div>
     </div>
   )

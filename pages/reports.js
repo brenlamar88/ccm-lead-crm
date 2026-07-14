@@ -93,13 +93,13 @@ export default function Reports() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="reports" isAdmin={isAdmin} />
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Weekly SDR Report</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>Week of {startStr} → {endStr}</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>Week of {startStr} → {endStr}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             <button onClick={() => setAnchor(fmt(addDays(start, -7)))} style={navBtn}>← Prev</button>
@@ -110,26 +110,26 @@ export default function Reports() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '50px', color: '#6b7280' }}>⏳ Loading…</div>
+          <div style={{ textAlign: 'center', padding: '50px', color: 'var(--muted)' }}>⏳ Loading…</div>
         ) : rows.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '50px 20px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16 }}>
+          <div style={{ textAlign: 'center', padding: '50px 20px', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16 }}>
             <p style={{ fontSize: 32, marginBottom: 8 }}>📊</p>
             <p style={{ fontWeight: 700 }}>No activity for this week</p>
-            <p style={{ color: '#6b7280', fontSize: 13 }}>Pick another week or log some contacts.</p>
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>Pick another week or log some contacts.</p>
           </div>
         ) : (
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflowX: 'auto' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8fafc' }}>
+                <tr style={{ background: 'var(--bg)' }}>
                   {COLS.map((c, i) => (
-                    <th key={c[0]} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '10px 12px', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{c[0]}</th>
+                    <th key={c[0]} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '10px 12px', fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{c[0]}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r, ri) => (
-                  <tr key={r.rep} style={{ borderTop: '1px solid #f1f5f9' }}>
+                  <tr key={r.rep} style={{ borderTop: '1px solid var(--line)' }}>
                     {COLS.map((c, i) => (
                       <td key={c[0]} style={{ textAlign: i === 0 ? 'left' : 'center', padding: '10px 12px', fontWeight: i === 0 ? 600 : 400 }}>{c[1](r)}</td>
                     ))}
@@ -144,5 +144,5 @@ export default function Reports() {
   )
 }
 
-const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid #d1d5db', fontSize: 13 }
-const navBtn = { padding: '7px 12px', borderRadius: 9, border: '1px solid #d1d5db', background: '#fff', fontSize: 12, fontWeight: 600, color: '#374151', cursor: 'pointer' }
+const sel = { padding: '7px 10px', borderRadius: 9, border: '1px solid var(--line-strong)', fontSize: 13 }
+const navBtn = { padding: '7px 12px', borderRadius: 9, border: '1px solid var(--line-strong)', background: 'var(--surface)', fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', cursor: 'pointer' }
