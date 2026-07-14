@@ -4,9 +4,9 @@ import { supabase } from '../lib/supabase'
 import { authedFetch } from '../lib/authedFetch'
 import Nav from '../components/Nav'
 
-const TEAL = '#0d9e72'
-const TEAL_LIGHT = '#e6f7f2'
-const TEAL_DARK = '#076e4e'
+const TEAL = 'var(--brand)'
+const TEAL_LIGHT = 'var(--brand-50)'
+const TEAL_DARK = 'var(--brand-700)'
 
 const VP_LABELS = {
   revenue: 'additional Medicare revenue — practices bill $40–$100+ per CCM patient per month with no extra staff',
@@ -42,7 +42,7 @@ function LeadCard({ lead, onSave, saving }) {
   }
 
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px', marginBottom: 10 }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '16px', marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>{lead.name}</p>
@@ -51,17 +51,17 @@ function LeadCard({ lead, onSave, saving }) {
             <Badge label={`Medicare: ${lead.medicare_likelihood}`} score={lead.medicare_likelihood} />
           </div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 12, color: '#6b7280' }}>👨‍⚕️ {lead.provider_count} providers</span>
-            <span style={{ fontSize: 12, color: '#6b7280' }}>👥 {lead.patient_volume}</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>👨‍⚕️ {lead.provider_count} providers</span>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>👥 {lead.patient_volume}</span>
           </div>
-          <p style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5, marginBottom: 4 }}>{lead.fit_rationale}</p>
-          <p style={{ fontSize: 12, color: '#374151', marginBottom: 4 }}><strong>Contact:</strong> {lead.decision_maker}</p>
-          {lead.address && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 2 }}>📍 {lead.address}</p>}
-          {lead.phone && <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>📞 {lead.phone}</p>}
+          <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 4 }}>{lead.fit_rationale}</p>
+          <p style={{ fontSize: 12, color: 'var(--ink-2)', marginBottom: 4 }}><strong>Contact:</strong> {lead.decision_maker}</p>
+          {lead.address && <p style={{ fontSize: 11, color: 'var(--faint)', marginBottom: 2 }}>📍 {lead.address}</p>}
+          {lead.phone && <p style={{ fontSize: 11, color: 'var(--faint)', marginBottom: 4 }}>📞 {lead.phone}</p>}
           {lead.npi && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <span style={{ fontSize: 10, fontWeight: 700, background: '#eff6ff', color: '#1e40af', padding: '2px 7px', borderRadius: 20 }}>NPI {lead.npi}</span>
-              <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#0d9e72', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
+              <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
             </div>
           )}
         </div>
@@ -70,7 +70,7 @@ function LeadCard({ lead, onSave, saving }) {
       <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
         <button onClick={() => setOpen(!open)} style={{
           background: open ? TEAL_LIGHT : 'transparent', color: open ? TEAL_DARK : '#6b7280',
-          border: `1px solid ${open ? TEAL : '#d1d5db'}`, borderRadius: 8,
+          border: `1px solid ${open ? TEAL : 'var(--line-strong)'}`, borderRadius: 8,
           padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 500
         }}>✉️ {open ? 'Hide' : 'Show'} email</button>
 
@@ -86,12 +86,12 @@ function LeadCard({ lead, onSave, saving }) {
       </div>
 
       {open && (
-        <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: 12, marginTop: 10, fontSize: 12, color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+        <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, marginTop: 10, fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
           {lead.outreach_email}
           <div style={{ marginTop: 10 }}>
             <button onClick={copy} style={{
               background: copied ? TEAL : '#fff', color: copied ? '#fff' : '#374151',
-              border: '1px solid #d1d5db', borderRadius: 8, padding: '5px 14px',
+              border: '1px solid var(--line-strong)', borderRadius: 8, padding: '5px 14px',
               fontSize: 12, cursor: 'pointer', fontWeight: 500
             }}>{copied ? '✓ Copied!' : 'Copy email'}</button>
           </div>
@@ -103,10 +103,10 @@ function LeadCard({ lead, onSave, saving }) {
 
 const input = {
   width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #d1d5db', fontSize: 14, background: '#fff', outline: 'none'
+  border: '1px solid var(--line-strong)', fontSize: 14, background: 'var(--surface)', outline: 'none'
 }
 const label = {
-  fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5,
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5,
   display: 'block', letterSpacing: '0.06em', textTransform: 'uppercase'
 }
 
@@ -177,15 +177,15 @@ export default function Home() {
   const highCount = leads.filter(l => l.fit_score === 'High').length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="generate" isAdmin={isAdmin} />
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 16px' }}>
 
         {!done && (
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: '28px 24px' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '28px 24px' }}>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Find CCM prospects</h1>
-            <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 24 }}>Generate qualified primary care leads for Anchored Health care management outreach.</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 24 }}>Generate qualified primary care leads for Anchored Health care management outreach.</p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div><label style={label}>City</label><input style={input} placeholder="e.g. Lafayette" value={city} onChange={e => setCity(e.target.value)} /></div>
@@ -267,8 +267,8 @@ export default function Home() {
                 }}>View Pipeline →</Link>
               )}
               <button onClick={reset} style={{
-                padding: '8px 16px', background: '#fff', color: '#374151',
-                border: '1px solid #e5e7eb', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer'
+                padding: '8px 16px', background: 'var(--surface)', color: 'var(--ink-2)',
+                border: '1px solid var(--line)', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer'
               }}>🔄 New search</button>
             </div>
 
@@ -277,7 +277,7 @@ export default function Home() {
               {['all', 'High', 'Medium', 'Low'].map(f => (
                 <button key={f} onClick={() => setFilter(f)} style={{
                   padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  border: `1px solid ${filter === f ? TEAL : '#d1d5db'}`,
+                  border: `1px solid ${filter === f ? TEAL : 'var(--line-strong)'}`,
                   background: filter === f ? TEAL_LIGHT : '#fff',
                   color: filter === f ? TEAL_DARK : '#6b7280'
                 }}>{f === 'all' ? 'All leads' : `${f} fit`}</button>

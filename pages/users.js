@@ -4,17 +4,17 @@ import { supabase } from '../lib/supabase'
 import { authedFetch } from '../lib/authedFetch'
 import Nav from '../components/Nav'
 
-const TEAL = '#0d9e72'
-const TEAL_LIGHT = '#e6f7f2'
-const TEAL_DARK = '#076e4e'
+const TEAL = 'var(--brand)'
+const TEAL_LIGHT = 'var(--brand-50)'
+const TEAL_DARK = 'var(--brand-700)'
 
 const ROLE_STYLES = {
   admin:  { bg: '#ede9fe', text: '#5b21b6', label: 'Admin' },
   member: { bg: '#f1f5f9', text: '#475569', label: 'Member' },
 }
 
-const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
-const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
+const fieldLabel = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line-strong)', fontSize: 14, boxSizing: 'border-box' }
 
 function genPassword() {
   // Readable but strong temporary password.
@@ -35,6 +35,7 @@ export default function Users() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState(EMPTY_NEW)
   const [busyId, setBusyId] = useState(null)
+  const [enabled, setEnabled] = useState(true)
 
   useEffect(() => { load() }, [])
 
@@ -46,6 +47,7 @@ export default function Users() {
       if (!res.ok) throw new Error(data.error)
       setUsers(data.users || [])
       setMe(data.me || null)
+      setEnabled(data.userMgmtEnabled !== false)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -131,36 +133,64 @@ export default function Users() {
   const isAdmin = me?.role === 'admin'
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="users" isAdmin={isAdmin} />
 
       <div style={{ maxWidth: 820, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>User Management</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>{users.length} {users.length === 1 ? 'user' : 'users'} · admins can assign leads and manage accounts</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{users.length} {users.length === 1 ? 'user' : 'users'} · admins can assign leads and manage accounts</p>
           </div>
           {isAdmin && (
-            <button onClick={() => { setShowAdd(s => !s); setError('') }} style={{
-              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              border: 'none', background: TEAL, color: '#fff'
+            <button onClick={() => { setShowAdd(s => !s); setError('') }} disabled={!enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} style={{
+              padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: enabled ? 'pointer' : 'not-allowed',
+              border: 'none', background: enabled ? TEAL : '#9ca3af', color: '#fff'
             }}>{showAdd ? '✕ Cancel' : '＋ Add User'}</button>
           )}
         </div>
+
+        {isAdmin && !enabled && (
+          <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', borderRadius: 12, padding: '14px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.6 }}>
+            <p style={{ fontWeight: 700, marginBottom: 4 }}>⚠️ User management isn't fully enabled yet</p>
+            <p style={{ marginBottom: 6 }}>You can view users and change roles, but <strong>adding, removing, and resetting passwords</strong> need the Supabase service-role key. To enable it:</p>
+            <ol style={{ margin: 0, paddingLeft: 18 }}>
+              <li>Supabase → project <strong>supabase-yellow-kite</strong> → Settings → API → copy the <strong>service_role</strong> secret</li>
+              <li>Vercel → <strong>ccm-lead-crm</strong> → Settings → Environment Variables → add <code>SUPABASE_SERVICE_ROLE_KEY</code> (Production + Preview)</li>
+              <li>Redeploy</li>
+            </ol>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '12px 16px', marginBottom: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Roles & permissions</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ROLE_STYLES.admin.bg, color: ROLE_STYLES.admin.text, height: 'fit-content' }}>Admin</span>
+                <p style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.5 }}>Full access: manage users & roles, add/remove accounts, reset passwords, and assign leads/companies/contacts to owners.</p>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ROLE_STYLES.member.bg, color: ROLE_STYLES.member.text, height: 'fit-content' }}>Member</span>
+                <p style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.5 }}>Full CRM use: generate leads, work the pipeline, and manage companies & contacts. Cannot manage users or assign owners.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {notice && <div style={{ background: '#d1fae5', color: '#065f46', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16, whiteSpace: 'pre-wrap' }}>{notice}</div>}
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
         {!loading && !isAdmin && (
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
             <p style={{ fontSize: 32, marginBottom: 10 }}>🔒</p>
             <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>Admins only</p>
-            <p style={{ color: '#6b7280', fontSize: 13 }}>You don't have permission to manage users. Ask an admin for access.</p>
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>You don't have permission to manage users. Ask an admin for access.</p>
           </div>
         )}
 
         {isAdmin && showAdd && (
-          <form onSubmit={addUser} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 20, marginBottom: 20 }}>
+          <form onSubmit={addUser} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, padding: 20, marginBottom: 20 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div><label style={fieldLabel}>Email *</label><input style={fieldInput} type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="name@anchoredhealth.org" /></div>
               <div><label style={fieldLabel}>Full name</label><input style={fieldInput} value={form.full_name} onChange={e => setForm({ ...form, full_name: e.target.value })} placeholder="First Last" /></div>
@@ -179,7 +209,7 @@ export default function Users() {
               </div>
               <button type="button" onClick={() => setForm({ ...form, password: genPassword() })} style={{
                 padding: '10px 14px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                border: '1px solid #d1d5db', background: '#fff', color: '#374151', whiteSpace: 'nowrap'
+                border: '1px solid var(--line-strong)', background: 'var(--surface)', color: 'var(--ink-2)', whiteSpace: 'nowrap'
               }}>🎲 Generate</button>
             </div>
             <button type="submit" disabled={busyId === 'new'} style={{
@@ -190,29 +220,29 @@ export default function Users() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>⏳ Loading users…</div>
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>⏳ Loading users…</div>
         ) : isAdmin ? (
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, overflow: 'hidden' }}>
             {users.map((u, i) => {
               const rs = ROLE_STYLES[u.role] || ROLE_STYLES.member
               const busy = busyId === u.id
               const isSelf = u.id === me?.id
               return (
-                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderTop: i ? '1px solid #f1f5f9' : 'none', flexWrap: 'wrap' }}>
+                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderTop: i ? '1px solid var(--line)' : 'none', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontWeight: 600, fontSize: 14 }}>{u.full_name || u.email}</span>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: rs.bg, color: rs.text }}>{rs.label}</span>
-                      {isSelf && <span style={{ fontSize: 10, color: '#9ca3af' }}>(you)</span>}
+                      {isSelf && <span style={{ fontSize: 10, color: 'var(--faint)' }}>(you)</span>}
                     </div>
-                    {u.full_name && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{u.email}</p>}
+                    {u.full_name && <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>{u.email}</p>}
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button disabled={busy} onClick={() => toggleRole(u)} style={btn('#eff6ff', '#1e40af')}>
+                    <button disabled={busy || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => toggleRole(u)} style={btn('#eff6ff', '#1e40af', busy || !enabled)}>
                       {u.role === 'admin' ? 'Make member' : 'Make admin'}
                     </button>
-                    <button disabled={busy} onClick={() => resetPassword(u)} style={btn('#fff7ed', '#9a3412')}>Reset password</button>
-                    <button disabled={busy || isSelf} onClick={() => removeUser(u)} style={btn('#fee2e2', '#991b1b', busy || isSelf)}>Remove</button>
+                    <button disabled={busy || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => resetPassword(u)} style={btn('#fff7ed', '#9a3412', busy || !enabled)}>Reset password</button>
+                    <button disabled={busy || isSelf || !enabled} title={enabled ? '' : 'Requires SUPABASE_SERVICE_ROLE_KEY'} onClick={() => removeUser(u)} style={btn('#fee2e2', '#991b1b', busy || isSelf || !enabled)}>Remove</button>
                   </div>
                 </div>
               )
@@ -227,7 +257,7 @@ export default function Users() {
 function btn(bg, color, disabled) {
   return {
     fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8,
-    border: '1px solid #e5e7eb', background: bg, color,
+    border: '1px solid var(--line)', background: bg, color,
     cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
   }
 }

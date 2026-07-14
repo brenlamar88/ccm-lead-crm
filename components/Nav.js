@@ -1,46 +1,74 @@
 import Link from 'next/link'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-
-const TEAL = '#0d9e72'
-const TEAL_LIGHT = '#e6f7f2'
-const TEAL_DARK = '#076e4e'
+import ThemeToggle from './ThemeToggle'
 
 const LINKS = [
-  { key: 'generate', href: '/', label: 'Generate' },
+  { key: 'dashboard', href: '/dashboard', label: 'Dashboard' },
   { key: 'pipeline', href: '/pipeline', label: 'Pipeline' },
   { key: 'companies', href: '/companies', label: 'Companies' },
   { key: 'contacts', href: '/contacts', label: 'Contacts' },
+  { key: 'activities', href: '/activities', label: 'Activity' },
+  { key: 'reports', href: '/reports', label: 'Reports' },
+  { key: 'generate', href: '/', label: 'Generate' },
 ]
 
-export default function Nav({ active, isAdmin }) {
+function NavLink({ href, label, active }) {
+  const [hover, setHover] = useState(false)
   return (
-    <nav style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 32, height: 32, background: TEAL, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🏥</div>
-        <span style={{ fontWeight: 700, fontSize: 15 }}>CCM Lead CRM</span>
-        <span style={{ fontSize: 11, color: '#6b7280', background: '#f1f5f9', padding: '2px 8px', borderRadius: 20 }}>Anchored Health</span>
-      </div>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        {LINKS.map(l => {
-          const on = l.key === active
-          return (
-            <Link key={l.key} href={l.href} style={{
-              padding: '6px 14px', borderRadius: 8, fontSize: 13,
-              fontWeight: on ? 600 : 500,
-              background: on ? TEAL_LIGHT : 'transparent',
-              color: on ? TEAL_DARK : '#6b7280',
-            }}>{l.label}</Link>
-          )
-        })}
-        {isAdmin && (
-          <Link href="/users" style={{
-            padding: '6px 14px', borderRadius: 8, fontSize: 13,
-            fontWeight: active === 'users' ? 600 : 500,
-            background: active === 'users' ? TEAL_LIGHT : 'transparent',
-            color: active === 'users' ? TEAL_DARK : '#6b7280',
-          }}>Users</Link>
-        )}
-        <button onClick={() => supabase.auth.signOut()} style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#6b7280', background: 'transparent', border: '1px solid #e5e7eb', cursor: 'pointer', marginLeft: 8 }}>Sign out</button>
+    <Link
+      href={href}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        padding: '7px 13px', borderRadius: 999, fontSize: 13.5, whiteSpace: 'nowrap',
+        fontWeight: active ? 650 : 500,
+        background: active ? 'var(--brand-50)' : hover ? 'var(--surface-2)' : 'transparent',
+        color: active ? 'var(--brand-700)' : hover ? 'var(--ink-2)' : 'var(--muted)',
+        transition: 'background .15s ease, color .15s ease',
+      }}
+    >{label}</Link>
+  )
+}
+
+export default function Nav({ active, isAdmin }) {
+  const [signHover, setSignHover] = useState(false)
+  return (
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'var(--nav-bg)', backdropFilter: 'saturate(180%) blur(12px)',
+      WebkitBackdropFilter: 'saturate(180%) blur(12px)',
+      borderBottom: '1px solid var(--line)',
+      padding: '0 20px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+    }}>
+      <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 11, flexShrink: 0 }}>
+        <div style={{
+          width: 34, height: 34, borderRadius: 10,
+          background: 'linear-gradient(135deg, #14c58e 0%, #0d9e72 60%, #0b8a63 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17,
+          boxShadow: '0 2px 8px rgba(13,158,114,.35), inset 0 1px 0 rgba(255,255,255,.25)',
+        }}>⚕️</div>
+        <div style={{ lineHeight: 1.1 }}>
+          <div style={{ fontWeight: 800, fontSize: 14.5, letterSpacing: '-0.01em', color: 'var(--ink)' }}>Anchored CRM</div>
+          <div style={{ fontSize: 10.5, color: 'var(--faint)', fontWeight: 600, letterSpacing: '0.02em' }}>Anchored Health</div>
+        </div>
+      </Link>
+
+      <div style={{ display: 'flex', gap: 2, alignItems: 'center', overflowX: 'auto', flex: 1, justifyContent: 'flex-end' }}>
+        {LINKS.map(l => <NavLink key={l.key} href={l.href} label={l.label} active={l.key === active} />)}
+        {isAdmin && <NavLink href="/users" label="Users" active={active === 'users'} />}
+        <span style={{ marginLeft: 6 }}><ThemeToggle /></span>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          onMouseEnter={() => setSignHover(true)}
+          onMouseLeave={() => setSignHover(false)}
+          style={{
+            marginLeft: 8, padding: '7px 14px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+            color: signHover ? 'var(--ink)' : 'var(--muted)',
+            background: signHover ? 'var(--surface-2)' : 'transparent',
+            border: '1px solid var(--line-strong)', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+        >Sign out</button>
       </div>
     </nav>
   )

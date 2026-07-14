@@ -3,10 +3,11 @@ import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 import { authedFetch } from '../lib/authedFetch'
 import Nav from '../components/Nav'
+import { LeadActivity } from '../components/activities'
 
-const TEAL = '#0d9e72'
-const TEAL_LIGHT = '#e6f7f2'
-const TEAL_DARK = '#076e4e'
+const TEAL = 'var(--brand)'
+const TEAL_LIGHT = 'var(--brand-50)'
+const TEAL_DARK = 'var(--brand-700)'
 
 const STATUSES = ['New', 'Contacted', 'Demo Scheduled', 'Closed Won', 'Closed Lost']
 const OPEN_STATUSES = ['New', 'Contacted', 'Demo Scheduled']
@@ -104,8 +105,8 @@ function Pill({ style, children }) {
   )
 }
 
-const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
-const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
+const fieldLabel = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
+const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line-strong)', fontSize: 14, boxSizing: 'border-box' }
 
 function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
   const [status, setStatus] = useState(lead.status || 'New')
@@ -151,10 +152,10 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <h2 style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3, flex: 1, marginRight: 12 }}>{lead.name}</h2>
-          <button onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'var(--surface-2)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
 
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -173,21 +174,21 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
             ['Email', lead.email],
             ['Website', lead.website],
           ].map(([k, v]) => v && (
-            <div key={k} style={{ background: '#f8fafc', borderRadius: 8, padding: '8px 10px' }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{k}</p>
-              <p style={{ fontSize: 13, color: '#111', wordBreak: 'break-word' }}>{v}</p>
+            <div key={k} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px' }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{k}</p>
+              <p style={{ fontSize: 13, color: 'var(--ink)', wordBreak: 'break-word' }}>{v}</p>
             </div>
           ))}
         </div>
 
-        {lead.address && <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>📍 {lead.address}</p>}
+        {lead.address && <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>📍 {lead.address}</p>}
         {lead.npi && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 10, fontWeight: 700, background: '#eff6ff', color: '#1e40af', padding: '2px 7px', borderRadius: 20 }}>NPI {lead.npi}</span>
-            <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#0d9e72', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
+            <a href={`https://npiregistry.cms.hhs.gov/provider-view/${lead.npi}`} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>✓ Verify on CMS registry ↗</a>
           </div>
         )}
-        {lead.fit_rationale && <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.6, marginBottom: 16, background: '#f8fafc', padding: '10px 12px', borderRadius: 8 }}>{lead.fit_rationale}</p>}
+        {lead.fit_rationale && <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 16, background: 'var(--bg)', padding: '10px 12px', borderRadius: 8 }}>{lead.fit_rationale}</p>}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
           <div>
@@ -211,14 +212,14 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={fieldLabel}>Assigned to {!isAdmin && <span style={{ textTransform: 'none', fontWeight: 500, color: '#9ca3af' }}>· admin only</span>}</label>
+          <label style={fieldLabel}>Assigned to {!isAdmin && <span style={{ textTransform: 'none', fontWeight: 500, color: 'var(--faint)' }}>· admin only</span>}</label>
           {isAdmin ? (
             <select value={assignedTo} onChange={e => setAssignedTo(e.target.value)} style={fieldInput}>
               <option value="">— Unassigned —</option>
               {(users || []).map(u => <option key={u.id} value={u.id}>{u.full_name || u.email}</option>)}
             </select>
           ) : (
-            <p style={{ fontSize: 13, color: '#374151', background: '#f8fafc', borderRadius: 10, padding: '10px 12px' }}>
+            <p style={{ fontSize: 13, color: 'var(--ink-2)', background: 'var(--bg)', borderRadius: 10, padding: '10px 12px' }}>
               {userName(users, lead.assigned_to) || 'Unassigned'}
             </p>
           )}
@@ -250,21 +251,26 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
         </div>
 
         {lead.outreach_email && (
-          <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 10, padding: 12, marginBottom: 16 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Outreach email</p>
-            <p style={{ fontSize: 12, color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{lead.outreach_email}</p>
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Outreach email</p>
+            <p style={{ fontSize: 12, color: 'var(--ink-2)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{lead.outreach_email}</p>
             <button onClick={copy} style={{
               marginTop: 10, background: copied ? TEAL : '#fff', color: copied ? '#fff' : '#374151',
-              border: '1px solid #d1d5db', borderRadius: 8, padding: '5px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500
+              border: '1px solid var(--line-strong)', borderRadius: 8, padding: '5px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500
             }}>{copied ? '✓ Copied!' : 'Copy email'}</button>
           </div>
         )}
 
         {lead.lead_runs && (
-          <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 16 }}>
+          <p style={{ fontSize: 11, color: 'var(--faint)', marginBottom: 16 }}>
             From: {lead.lead_runs.city}, {lead.lead_runs.state} · {new Date(lead.lead_runs.created_at).toLocaleDateString()}
           </p>
         )}
+
+        <div style={{ borderTop: '1px solid var(--line)', paddingTop: 14, marginBottom: 16 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>📇 Contact activity</p>
+          <LeadActivity leadId={lead.id} />
+        </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={save} disabled={saving} style={{
@@ -272,8 +278,8 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
             borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer'
           }}>{saving ? 'Saving…' : '💾 Save changes'}</button>
           <button onClick={onClose} style={{
-            padding: '12px 16px', background: '#f1f5f9', border: 'none',
-            borderRadius: 10, fontSize: 14, color: '#374151', cursor: 'pointer', fontWeight: 600
+            padding: '12px 16px', background: 'var(--surface-2)', border: 'none',
+            borderRadius: 10, fontSize: 14, color: 'var(--ink-2)', cursor: 'pointer', fontWeight: 600
           }}>Cancel</button>
         </div>
       </div>
@@ -307,10 +313,10 @@ function NewLeadModal({ onClose, onCreate }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <form onSubmit={submit} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+      <form onSubmit={submit} style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ fontSize: 17, fontWeight: 700 }}>Add a lead</h2>
-          <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
+          <button type="button" onClick={onClose} style={{ background: 'var(--surface-2)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
 
         <div style={{ marginBottom: 14 }}>
@@ -395,8 +401,8 @@ function NewLeadModal({ onClose, onCreate }) {
             borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer'
           }}>{saving ? 'Saving…' : '＋ Add lead'}</button>
           <button type="button" onClick={onClose} style={{
-            padding: '12px 16px', background: '#f1f5f9', border: 'none',
-            borderRadius: 10, fontSize: 14, color: '#374151', cursor: 'pointer', fontWeight: 600
+            padding: '12px 16px', background: 'var(--surface-2)', border: 'none',
+            borderRadius: 10, fontSize: 14, color: 'var(--ink-2)', cursor: 'pointer', fontWeight: 600
           }}>Cancel</button>
         </div>
       </form>
@@ -411,7 +417,7 @@ function KanbanCard({ lead, onClick, onStatusChange, users }) {
   const assignee = userName(users, lead.assigned_to)
   return (
     <div onClick={onClick} style={{
-      background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
+      background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 10,
       padding: '12px 14px', marginBottom: 8, cursor: 'pointer',
       transition: 'box-shadow 0.15s', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}
@@ -424,19 +430,19 @@ function KanbanCard({ lead, onClick, onStatusChange, users }) {
         <Pill style={temp}>{temp.emoji} {lead.temperature || 'Cold'}</Pill>
         {lead.fit_score && <Pill style={fc}>{lead.fit_score} fit</Pill>}
       </div>
-      <p style={{ fontSize: 11, color: '#6b7280', marginBottom: 6 }}>
+      <p style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 6 }}>
         {lead.provider_count ? `👨‍⚕️ ${lead.provider_count} · ` : ''}{lead.decision_maker || '—'}
       </p>
-      <p style={{ fontSize: 11, color: assignee ? '#0d9e72' : '#9ca3af', fontWeight: assignee ? 600 : 400, marginBottom: 6 }}>
+      <p style={{ fontSize: 11, color: assignee ? 'var(--brand)' : '#9ca3af', fontWeight: assignee ? 600 : 400, marginBottom: 6 }}>
         {assignee ? `👤 ${assignee}` : '○ Unassigned'}
       </p>
-      {lead.notes && <p style={{ fontSize: 11, color: '#9ca3af', fontStyle: 'italic', borderTop: '1px solid #f1f5f9', paddingTop: 6, marginTop: 4 }}>{lead.notes.slice(0, 60)}{lead.notes.length > 60 ? '…' : ''}</p>}
+      {lead.notes && <p style={{ fontSize: 11, color: 'var(--faint)', fontStyle: 'italic', borderTop: '1px solid var(--line)', paddingTop: 6, marginTop: 4 }}>{lead.notes.slice(0, 60)}{lead.notes.length > 60 ? '…' : ''}</p>}
 
       <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
         {STATUSES.filter(s => s !== lead.status).slice(0, 2).map(s => (
           <button key={s} onClick={() => onStatusChange(lead.id, s)} style={{
             fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 20, cursor: 'pointer',
-            background: '#f8fafc', border: '1px solid #e5e7eb', color: '#6b7280'
+            background: 'var(--bg)', border: '1px solid var(--line)', color: 'var(--muted)'
           }}>→ {s}</button>
         ))}
       </div>
@@ -447,11 +453,11 @@ function KanbanCard({ lead, onClick, onStatusChange, users }) {
 function FilterRow({ label, options, value, onChange }) {
   return (
     <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: 64 }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--faint)', textTransform: 'uppercase', letterSpacing: '0.05em', minWidth: 64 }}>{label}</span>
       {options.map(opt => (
         <button key={opt.value} onClick={() => onChange(opt.value)} style={{
           padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          border: `1px solid ${value === opt.value ? TEAL : '#d1d5db'}`,
+          border: `1px solid ${value === opt.value ? TEAL : 'var(--line-strong)'}`,
           background: value === opt.value ? TEAL_LIGHT : '#fff',
           color: value === opt.value ? TEAL_DARK : '#6b7280'
         }}>{opt.label}</button>
@@ -561,7 +567,7 @@ export default function Pipeline() {
   const lostCount = filteredLeads.filter(l => l.status === 'Closed Lost').length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="pipeline" isAdmin={isAdmin} />
 
       <div style={{ padding: '24px 16px' }}>
@@ -570,9 +576,9 @@ export default function Pipeline() {
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Lead Pipeline</h1>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, color: '#6b7280' }}>{filteredLeads.length} leads</span>
+              <span style={{ fontSize: 12, color: 'var(--muted)' }}>{filteredLeads.length} leads</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#1e40af' }}>● {openCount} open</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>● {closedCount} closed</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>● {closedCount} closed</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#065f46' }}>🏆 {wonCount} won</span>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#991b1b' }}>❌ {lostCount} lost</span>
             </div>
@@ -589,14 +595,14 @@ export default function Pipeline() {
               style={{
                 padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700,
                 cursor: filteredLeads.length === 0 ? 'default' : 'pointer',
-                border: '1px solid #d1d5db', background: '#fff',
+                border: '1px solid var(--line-strong)', background: 'var(--surface)',
                 color: filteredLeads.length === 0 ? '#9ca3af' : '#374151'
               }}>⬇ Export CSV{filteredLeads.length ? ` (${filteredLeads.length})` : ''}</button>
           </div>
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20, background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '12px 14px' }}>
           <FilterRow label="Source" value={dirFilter} onChange={setDirFilter} options={[
             { value: 'all', label: 'All' },
             { value: 'Inbound', label: '📥 Inbound' },
@@ -624,15 +630,15 @@ export default function Pipeline() {
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--muted)' }}>
             <p style={{ fontSize: 24, marginBottom: 8 }}>⏳</p>
             <p>Loading pipeline…</p>
           </div>
         ) : leads.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--line)' }}>
             <p style={{ fontSize: 40, marginBottom: 12 }}>🏥</p>
             <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No leads yet</p>
-            <p style={{ color: '#6b7280', fontSize: 13, marginBottom: 20 }}>Add an inbound lead manually, or generate a batch of CCM prospects.</p>
+            <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 20 }}>Add an inbound lead manually, or generate a batch of CCM prospects.</p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={() => setShowNew(true)} style={{ padding: '10px 24px', background: TEAL, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>＋ Add a lead</button>
               <Link href="/" style={{ padding: '10px 24px', background: '#eff6ff', color: '#1e40af', borderRadius: 10, fontWeight: 700, fontSize: 14 }}>Generate leads →</Link>
@@ -648,15 +654,15 @@ export default function Pipeline() {
                 <div key={status}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
                     <span style={{ fontSize: 14 }}>{ss.emoji}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>{status}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{status}</span>
                     <span style={{
                       fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20,
                       background: ss.bg, color: ss.text, border: `1px solid ${ss.border}`
                     }}>{colLeads.length}</span>
                   </div>
-                  <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '10px', minHeight: 100 }}>
+                  <div style={{ background: 'var(--surface-2)', borderRadius: 12, padding: '10px', minHeight: 100 }}>
                     {colLeads.length === 0 ? (
-                      <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center', padding: '16px 0' }}>No leads</p>
+                      <p style={{ fontSize: 12, color: 'var(--faint)', textAlign: 'center', padding: '16px 0' }}>No leads</p>
                     ) : (
                       colLeads.map(lead => (
                         <KanbanCard

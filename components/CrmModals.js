@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { authedFetch } from '../lib/authedFetch'
 
-export const TEAL = '#0d9e72'
-export const TEAL_LIGHT = '#e6f7f2'
-export const TEAL_DARK = '#076e4e'
+export const TEAL = 'var(--brand)'
+export const TEAL_LIGHT = 'var(--brand-50)'
+export const TEAL_DARK = 'var(--brand-700)'
 
-export const fieldLabel = { fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
-export const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 14, boxSizing: 'border-box' }
+export const fieldLabel = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.06em' }
+export const fieldInput = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line-strong)', fontSize: 14, boxSizing: 'border-box' }
 
 export function contactName(c) {
   if (!c) return ''
@@ -26,7 +26,7 @@ function ModalHead({ title, onClose }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
       <h2 style={{ fontSize: 17, fontWeight: 700 }}>{title}</h2>
-      <button type="button" onClick={onClose} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
+      <button type="button" onClick={onClose} style={{ background: 'var(--surface-2)', border: 'none', borderRadius: 8, width: 32, height: 32, cursor: 'pointer', fontSize: 16 }}>✕</button>
     </div>
   )
 }
@@ -81,7 +81,7 @@ export function CompanyModal({ company, users, isAdmin, onClose, onSaved }) {
 
   return (
     <Overlay>
-      <form onSubmit={submit} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 620, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+      <form onSubmit={submit} style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, maxWidth: 620, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
         <ModalHead title={editing ? 'Edit company' : 'Add company'} onClose={onClose} />
 
         <div style={{ marginBottom: 12 }}>
@@ -150,7 +150,7 @@ export function CompanyModal({ company, users, isAdmin, onClose, onSaved }) {
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={saving} style={{ flex: 1, padding: 12, background: TEAL, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add company'}</button>
-          <button type="button" onClick={onClose} style={{ padding: '12px 16px', background: '#f1f5f9', border: 'none', borderRadius: 10, fontSize: 14, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+          <button type="button" onClick={onClose} style={{ padding: '12px 16px', background: 'var(--surface-2)', border: 'none', borderRadius: 10, fontSize: 14, color: 'var(--ink-2)', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
         </div>
       </form>
     </Overlay>
@@ -206,7 +206,7 @@ export function ContactModal({ contact, companies, defaultCompanyId, users, isAd
 
   return (
     <Overlay>
-      <form onSubmit={submit} style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+      <form onSubmit={submit} style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, maxWidth: 560, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
         <ModalHead title={editing ? 'Edit contact' : 'Add contact'} onClose={onClose} />
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
@@ -229,7 +229,7 @@ export function ContactModal({ contact, companies, defaultCompanyId, users, isAd
           </div>
         )}
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', marginBottom: 12, cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)', marginBottom: 12, cursor: 'pointer' }}>
           <input type="checkbox" checked={!!form.is_primary} onChange={e => set('is_primary', e.target.checked)} />
           Primary contact for this company
         </label>
@@ -255,7 +255,7 @@ export function ContactModal({ contact, companies, defaultCompanyId, users, isAd
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={saving} style={{ flex: 1, padding: 12, background: TEAL, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Add contact'}</button>
-          <button type="button" onClick={onClose} style={{ padding: '12px 16px', background: '#f1f5f9', border: 'none', borderRadius: 10, fontSize: 14, color: '#374151', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
+          <button type="button" onClick={onClose} style={{ padding: '12px 16px', background: 'var(--surface-2)', border: 'none', borderRadius: 10, fontSize: 14, color: 'var(--ink-2)', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
         </div>
       </form>
     </Overlay>

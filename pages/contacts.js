@@ -52,18 +52,18 @@ export default function Contacts() {
     [contactName(c), c.title, c.email, c.phone, c.companies?.name].filter(Boolean).some(v => v.toLowerCase().includes(q)))
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <Nav active="contacts" isAdmin={isAdmin} />
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 2 }}>Contacts</h1>
-            <p style={{ fontSize: 13, color: '#6b7280' }}>{contacts.length} {contacts.length === 1 ? 'person' : 'people'}</p>
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>{contacts.length} {contacts.length === 1 ? 'person' : 'people'}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search contacts…"
-              style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid #d1d5db', fontSize: 13, minWidth: 200 }} />
+              style={{ padding: '8px 14px', borderRadius: 10, border: '1px solid var(--line-strong)', fontSize: 13, minWidth: 200 }} />
             <button onClick={() => setModal({})} style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', border: 'none', background: TEAL, color: '#fff' }}>＋ Add Contact</button>
           </div>
         </div>
@@ -71,26 +71,26 @@ export default function Contacts() {
         {error && <div style={{ background: '#fee2e2', color: '#991b1b', borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16 }}>{error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: '#6b7280' }}>⏳ Loading contacts…</div>
+          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--muted)' }}>⏳ Loading contacts…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--surface)', borderRadius: 16, border: '1px solid var(--line)' }}>
             <p style={{ fontSize: 40, marginBottom: 12 }}>👤</p>
             <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 6 }}>{q ? 'No matches' : 'No contacts yet'}</p>
-            <p style={{ color: '#6b7280', fontSize: 13 }}>{q ? 'Try a different search.' : 'Add a contact to get started.'}</p>
+            <p style={{ color: 'var(--muted)', fontSize: 13 }}>{q ? 'Try a different search.' : 'Add a contact to get started.'}</p>
           </div>
         ) : (
-          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 16, overflow: 'hidden' }}>
             {filtered.map((c, i) => (
-              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i ? '1px solid #f1f5f9' : 'none', flexWrap: 'wrap' }}>
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: i ? '1px solid var(--line)' : 'none', flexWrap: 'wrap' }}>
                 <div style={{ flex: 1, minWidth: 180 }}>
                   <p style={{ fontWeight: 600, fontSize: 14 }}>
-                    {contactName(c)} {c.is_primary && <span style={{ fontSize: 10, color: '#076e4e', background: '#e6f7f2', padding: '1px 6px', borderRadius: 20, marginLeft: 4 }}>Primary</span>}
+                    {contactName(c)} {c.is_primary && <span style={{ fontSize: 10, color: 'var(--brand-700)', background: 'var(--brand-50)', padding: '1px 6px', borderRadius: 20, marginLeft: 4 }}>Primary</span>}
                   </p>
-                  <p style={{ fontSize: 12, color: '#6b7280' }}>{[c.title, c.companies?.name].filter(Boolean).join(' · ') || '—'}</p>
+                  <p style={{ fontSize: 12, color: 'var(--muted)' }}>{[c.title, c.companies?.name].filter(Boolean).join(' · ') || '—'}</p>
                 </div>
                 <div style={{ flex: 1, minWidth: 160 }}>
-                  {c.email && <p style={{ fontSize: 12, color: '#374151' }}>✉️ {c.email}</p>}
-                  {(c.phone || c.mobile) && <p style={{ fontSize: 12, color: '#6b7280' }}>📞 {c.phone || c.mobile}</p>}
+                  {c.email && <p style={{ fontSize: 12, color: 'var(--ink-2)' }}>✉️ {c.email}</p>}
+                  {(c.phone || c.mobile) && <p style={{ fontSize: 12, color: 'var(--muted)' }}>📞 {c.phone || c.mobile}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => setModal({ contact: c })} style={pillBtn('#eff6ff', '#1e40af')}>Edit</button>
@@ -117,5 +117,5 @@ export default function Contacts() {
 }
 
 function pillBtn(bg, color) {
-  return { fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e7eb', background: bg, color, cursor: 'pointer' }
+  return { fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--line)', background: bg, color, cursor: 'pointer' }
 }

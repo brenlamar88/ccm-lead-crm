@@ -31,6 +31,7 @@ create table if not exists leads (
   direction text default 'Outbound' check (direction in ('Inbound', 'Outbound')),
   temperature text default 'Cold' check (temperature in ('Cold', 'Warm', 'Hot')),
   assigned_to uuid references profiles(id) on delete set null,
+  status_changed_at timestamptz,
   notes text
 );
 
@@ -106,6 +107,24 @@ create policy "allow all" on companies for all using (true) with check (true);
 create policy "allow all" on contacts for all using (true) with check (true);
 
 -- leads.company_id / leads.contact_id link each pipeline deal to its account.
+
+-- Contact activity / touchpoints logged by Service Development Reps.
+create table if not exists activities (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  occurred_at timestamptz default now(),
+  lead_id uuid references leads(id) on delete cascade,
+  company_id uuid references companies(id) on delete set null,
+  contact_id uuid references contacts(id) on delete set null,
+  rep_id uuid references profiles(id) on delete set null,
+  type text check (type in ('Call','Email','Text','Voicemail','Meeting','LinkedIn','Other')),
+  notes text,
+  next_action text,
+  followup_date date,
+  followup_done boolean default false
+);
+alter table activities enable row level security;
+create policy "allow all" on activities for all using (true) with check (true);
 
 -- Enable RLS but allow all for now (add auth later)
 alter table lead_runs enable row level security;
