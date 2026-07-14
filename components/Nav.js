@@ -6,10 +6,13 @@ const TEAL_LIGHT = '#e6f7f2'
 const TEAL_DARK = '#076e4e'
 
 const LINKS = [
-  { key: 'generate', href: '/', label: 'Generate' },
+  { key: 'dashboard', href: '/dashboard', label: 'Dashboard' },
   { key: 'pipeline', href: '/pipeline', label: 'Pipeline' },
   { key: 'companies', href: '/companies', label: 'Companies' },
   { key: 'contacts', href: '/contacts', label: 'Contacts' },
+  { key: 'activities', href: '/activities', label: 'Activity' },
+  { key: 'reports', href: '/reports', label: 'Reports' },
+  { key: 'generate', href: '/', label: 'Generate' },
 ]
 
 export default function Nav({ active, isAdmin }) {

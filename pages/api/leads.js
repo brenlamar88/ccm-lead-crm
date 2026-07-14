@@ -139,6 +139,8 @@ export default async function handler(req, res) {
       const admin = await requireAdmin(req)
       if (admin.error) return res.status(admin.status).json({ error: admin.error })
     }
+    // Stamp when the pipeline stage changes so reports can measure won/lost by week.
+    if ('status' in updates) updates.status_changed_at = new Date().toISOString()
 
     const { data, error } = await supabase
       .from('leads')

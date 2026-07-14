@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 import { authedFetch } from '../lib/authedFetch'
 import Nav from '../components/Nav'
+import { LeadActivity } from '../components/activities'
 
 const TEAL = '#0d9e72'
 const TEAL_LIGHT = '#e6f7f2'
@@ -265,6 +266,11 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
             From: {lead.lead_runs.city}, {lead.lead_runs.state} · {new Date(lead.lead_runs.created_at).toLocaleDateString()}
           </p>
         )}
+
+        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, marginBottom: 16 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 10 }}>📇 Contact activity</p>
+          <LeadActivity leadId={lead.id} />
+        </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={save} disabled={saving} style={{
