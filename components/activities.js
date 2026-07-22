@@ -34,11 +34,15 @@ export function repName(users, id) {
   return u ? (u.full_name || u.email) : ''
 }
 
-// Add/edit an activity. When fixedLeadId is set the lead picker is hidden.
-export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }) {
+// Add/edit an activity. When fixedLeadId is set the lead picker is hidden and
+// the activity is anchored to that lead. Otherwise the rep picks a Company
+// (all companies), an optional Contact from that company, and an optional Lead.
+export function ActivityForm({ activity, leads, companies, contacts, fixedLeadId, onSaved, onCancel }) {
   const editing = !!activity?.id
   const [type, setType] = useState(activity?.type || 'Call')
   const [leadId, setLeadId] = useState(activity?.lead_id || fixedLeadId || '')
+  const [companyId, setCompanyId] = useState(activity?.company_id || '')
+  const [contactId, setContactId] = useState(activity?.contact_id || '')
   const [occurredAt, setOccurredAt] = useState(
     activity?.occurred_at ? toLocalInput(new Date(activity.occurred_at)) : toLocalInput(new Date())
   )
@@ -48,12 +52,19 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Contacts belonging to the chosen company (for the optional contact picker).
+  const companyContacts = (contacts || []).filter(c => c.company_id === companyId)
+
+  const onCompanyChange = (val) => { setCompanyId(val); setContactId('') }
+
   const submit = async (e) => {
     e.preventDefault()
-    if (!leadId) { setError('Pick a lead'); return }
+    if (!fixedLeadId && !companyId && !leadId) { setError('Pick a company or lead'); return }
     setError(''); setSaving(true)
     const payload = {
-      lead_id: leadId,
+      lead_id: leadId || null,
+      company_id: fixedLeadId ? undefined : (companyId || null),
+      contact_id: fixedLeadId ? undefined : (contactId || null),
       type,
       notes: notes || null,
       next_action: nextAction || null,
@@ -79,16 +90,28 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
 
   return (
     <form onSubmit={submit} style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 12, padding: 14 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: fixedLeadId ? '1fr 1fr' : '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
-        {!fixedLeadId && (
+      {!fixedLeadId && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div>
-            <label style={fieldLabel}>Lead</label>
-            <select style={fieldInput} value={leadId} onChange={e => setLeadId(e.target.value)}>
-              <option value="">— Pick a lead —</option>
-              {(leads || []).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            <label style={fieldLabel}>Company</label>
+            <select style={fieldInput} value={companyId} onChange={e => onCompanyChange(e.target.value)}>
+              <option value="">— Pick a company —</option>
+              {(companies || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-        )}
+          <div>
+            <label style={fieldLabel}>Contact {companyId && companyContacts.length === 0 ? '· none on file' : '· optional'}</label>
+            <select style={fieldInput} value={contactId} onChange={e => setContactId(e.target.value)} disabled={!companyId || companyContacts.length === 0}>
+              <option value="">{companyId ? '— No specific contact —' : 'Pick a company first'}</option>
+              {companyContacts.map(c => {
+                const n = `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.title || c.email || 'Contact'
+                return <option key={c.id} value={c.id}>{n}</option>
+              })}
+            </select>
+          </div>
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: fixedLeadId ? '1fr 1fr' : '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <div>
           <label style={fieldLabel}>Type</label>
           <select style={fieldInput} value={type} onChange={e => setType(e.target.value)}>
@@ -99,6 +122,15 @@ export function ActivityForm({ activity, leads, fixedLeadId, onSaved, onCancel }
           <label style={fieldLabel}>When</label>
           <input type="datetime-local" style={fieldInput} value={occurredAt} onChange={e => setOccurredAt(e.target.value)} />
         </div>
+        {!fixedLeadId && (
+          <div>
+            <label style={fieldLabel}>Lead · optional</label>
+            <select style={fieldInput} value={leadId} onChange={e => setLeadId(e.target.value)}>
+              <option value="">— None —</option>
+              {(leads || []).map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
       <div style={{ marginBottom: 10 }}>
@@ -144,7 +176,12 @@ export function ActivityList({ activities, users, showLead, onEdit, onDelete, em
           <div key={a.id} style={{ border: '1px solid var(--line)', borderRadius: 10, padding: '10px 12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: ts.bg, color: ts.text }}>{ts.emoji} {a.type}</span>
-              {showLead && a.leads?.name && <span style={{ fontSize: 12, fontWeight: 600 }}>{a.leads.name}</span>}
+              {showLead && (a.companies?.name || a.leads?.name) && <span style={{ fontSize: 12, fontWeight: 600 }}>{a.companies?.name || a.leads?.name}</span>}
+              {showLead && a.contacts && (
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                  · {`${a.contacts.first_name || ''} ${a.contacts.last_name || ''}`.trim() || a.contacts.title || 'contact'}
+                </span>
+              )}
               <span style={{ fontSize: 11, color: 'var(--faint)' }}>
                 {a.occurred_at ? new Date(a.occurred_at).toLocaleString() : ''}
               </span>

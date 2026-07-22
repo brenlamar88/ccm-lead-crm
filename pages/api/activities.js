@@ -48,13 +48,13 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const activity = pick(req.body)
-    if (!activity.lead_id) return res.status(400).json({ error: 'A lead is required' })
+    if (!activity.lead_id && !activity.company_id) return res.status(400).json({ error: 'A company or lead is required' })
     if (activity.type && !VALID_TYPES.includes(activity.type)) return res.status(400).json({ error: 'Invalid contact type' })
     // Default the rep to whoever is logging.
     if (!activity.rep_id) activity.rep_id = caller.user.id
 
-    // Auto-fill company/contact from the lead when not supplied.
-    if (!activity.company_id || !activity.contact_id) {
+    // When logging against a lead, inherit its company/contact if not supplied.
+    if (activity.lead_id && (!activity.company_id || !activity.contact_id)) {
       const { data: lead } = await supabase.from('leads').select('company_id, contact_id').eq('id', activity.lead_id).single()
       if (lead) {
         if (!activity.company_id) activity.company_id = lead.company_id
