@@ -190,7 +190,7 @@ function LeadModal({ lead, onClose, onUpdate, users, companies, isAdmin }) {
         )}
         {lead.fit_rationale && <p style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.6, marginBottom: 16, background: 'var(--bg)', padding: '10px 12px', borderRadius: 8 }}>{lead.fit_rationale}</p>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 16 }}>
           <div>
             <label style={fieldLabel}>Stage</label>
             <select value={status} onChange={e => setStatus(e.target.value)} style={fieldInput}>
@@ -324,7 +324,7 @@ function NewLeadModal({ onClose, onCreate }) {
           <input value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Bayou Family Medicine" style={fieldInput} autoFocus />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
           <div>
             <label style={fieldLabel}>Direction</label>
             <select value={form.direction} onChange={e => set('direction', e.target.value)} style={fieldInput}>
@@ -369,7 +369,7 @@ function NewLeadModal({ onClose, onCreate }) {
           <input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Street, City, ST" style={fieldInput} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 14 }}>
           <div>
             <label style={fieldLabel}>Fit score</label>
             <select value={form.fit_score} onChange={e => set('fit_score', e.target.value)} style={fieldInput}>
