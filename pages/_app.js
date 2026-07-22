@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Head from 'next/head'
 import { useRouter } from 'next/router'
 import { Inter } from 'next/font/google'
 import { supabase } from '../lib/supabase'
@@ -35,6 +36,9 @@ export default function App({ Component, pageProps }) {
 
   return (
     <div className={`${inter.variable} ${inter.className}`}>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </Head>
       {checking && !PUBLIC_ROUTES.includes(router.pathname)
         ? <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />
         : <Component {...pageProps} />}

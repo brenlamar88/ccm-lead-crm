@@ -111,7 +111,7 @@ export function ActivityForm({ activity, leads, companies, contacts, fixedLeadId
           </div>
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: fixedLeadId ? '1fr 1fr' : '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: fixedLeadId ? '1fr 1fr' : 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 10 }}>
         <div>
           <label style={fieldLabel}>Type</label>
           <select style={fieldInput} value={type} onChange={e => setType(e.target.value)}>

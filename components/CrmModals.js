@@ -108,7 +108,7 @@ export function CompanyModal({ company, users, isAdmin, onClose, onSaved }) {
           <Field label="ZIP"><input style={fieldInput} value={form.zip || ''} onChange={e => set('zip', e.target.value)} /></Field>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10, marginBottom: 12 }}>
           <Field label="Patient volume">
             <select style={fieldInput} value={form.patient_volume || ''} onChange={e => set('patient_volume', e.target.value)}>
               <option value="">—</option>
