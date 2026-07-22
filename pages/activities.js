@@ -6,6 +6,8 @@ import { ActivityForm, ActivityList, ACTIVITY_TYPES, TEAL } from '../components/
 export default function Activities() {
   const [activities, setActivities] = useState([])
   const [leads, setLeads] = useState([])
+  const [companies, setCompanies] = useState([])
+  const [contacts, setContacts] = useState([])
   const [users, setUsers] = useState([])
   const [me, setMe] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -37,8 +39,12 @@ export default function Activities() {
 
   const loadAux = async () => {
     try {
-      const [lRes, uRes] = await Promise.all([authedFetch('/api/leads'), authedFetch('/api/users')])
+      const [lRes, cRes, ctRes, uRes] = await Promise.all([
+        authedFetch('/api/leads'), authedFetch('/api/companies'), authedFetch('/api/contacts'), authedFetch('/api/users'),
+      ])
       const lData = await lRes.json(); if (lRes.ok) setLeads((lData.leads || []).map(l => ({ id: l.id, name: l.name })))
+      const cData = await cRes.json(); if (cRes.ok) setCompanies((cData.companies || []).map(c => ({ id: c.id, name: c.name })).sort((a, b) => a.name.localeCompare(b.name)))
+      const ctData = await ctRes.json(); if (ctRes.ok) setContacts(ctData.contacts || [])
       const uData = await uRes.json(); if (uRes.ok) { setUsers(uData.users || []); setMe(uData.me || null) }
     } catch (_) {}
   }
@@ -76,7 +82,7 @@ export default function Activities() {
 
         {(showAdd || editing) && (
           <div style={{ marginBottom: 16 }}>
-            <ActivityForm activity={editing} leads={leads} onSaved={onSaved} onCancel={() => { setShowAdd(false); setEditing(null) }} />
+            <ActivityForm activity={editing} leads={leads} companies={companies} contacts={contacts} onSaved={onSaved} onCancel={() => { setShowAdd(false); setEditing(null) }} />
           </div>
         )}
 
